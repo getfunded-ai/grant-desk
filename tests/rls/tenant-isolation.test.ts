@@ -26,6 +26,10 @@ afterAll(async () => {
   await db?.close();
 });
 
+// Owner rows are protected by the last-owner rule too; aim the memberships checks at the other
+// members so only row-level security can stop them.
+const NOT_OWNER: Partial<Record<TenantTable, string>> = { memberships: "and role <> 'owner'" };
+
 // One column per table that the authenticated role may update, and a value for it.
 const TOUCH: Record<TenantTable, [string, unknown]> = {
   funders: ["name", "changed"],
@@ -100,7 +104,7 @@ describe.each(intruderCases())("%s", (_label, who) => {
     const after = await as(db, { role: "authenticated", userId: me }, async () => {
       const result = await attempt(
         db,
-        `update public.${table} set ${column} = $1 where organization_id = $2 returning id`,
+        `update public.${table} set ${column} = $1 where organization_id = $2 ${NOT_OWNER[table] ?? ""} returning id`,
         [value, theirs.id],
       );
       if (result.rows) expect(result.rows).toHaveLength(0);
@@ -116,7 +120,7 @@ describe.each(intruderCases())("%s", (_label, who) => {
     const after = await as(db, { role: "authenticated", userId: me }, async () => {
       const result = await attempt(
         db,
-        `delete from public.${table} where organization_id = $1 returning id`,
+        `delete from public.${table} where organization_id = $1 ${NOT_OWNER[table] ?? ""} returning id`,
         [theirs.id],
       );
       if (result.rows) expect(result.rows).toHaveLength(0);
@@ -215,7 +219,8 @@ describe("a viewer", () => {
     const before = await fingerprint(table, world.A.id);
     const after = await as(db, { role: "authenticated", userId: world.amy }, async () => {
       // A viewer may delete their own membership (leave); exclude it so the check is about others.
-      const filter = table === "memberships" ? `and user_id <> '${world.amy}'` : "";
+      const filter =
+        table === "memberships" ? `and user_id <> '${world.amy}' and role <> 'owner'` : "";
       const update = await attempt(
         db,
         `update public.${table} set ${column} = $1 where organization_id = $2 ${filter} returning id`,
@@ -236,13 +241,14 @@ describe("a viewer", () => {
 });
 
 describe("an owner in their own organization (the positive control)", () => {
-  const INSERTABLE = TENANT_TABLES.filter((t) => t !== "grant_stage_history");
+  // Stage history is written only by its trigger; members are added only by create_organization or
+  // server code (see rules.test.ts).
+  const INSERTABLE = TENANT_TABLES.filter(
+    (t) => t !== "grant_stage_history" && t !== "memberships",
+  );
 
   it.each(INSERTABLE)("can insert into %s", async (table) => {
-    const values =
-      table === "memberships"
-        ? { organization_id: world.A.id, user_id: world.nina, role: "viewer" }
-        : rowFor(table, world.A, world.alice);
+    const values = rowFor(table, world.A, world.alice);
     const result = await as(db, { role: "authenticated", userId: world.alice }, () =>
       attempt(db, ...insertSql(table, values)),
     );

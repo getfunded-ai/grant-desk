@@ -196,15 +196,22 @@ grant execute on function
 to authenticated, service_role;
 
 -- An organization always keeps at least one owner. Cascaded deletes (the organization or the
--- person's account being deleted) run one trigger level deeper and are allowed through.
+-- person's account being deleted) run one trigger level deeper and are allowed through; repairing an
+-- organization whose last owner deleted their account is a service-role step (Phase Y).
+-- Locking the organization row first makes two owners who demote each other at the same moment
+-- take turns, so the second one sees the first change and is refused.
 create function private.keep_one_owner()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 begin
   if pg_trigger_depth() > 1 then
     return coalesce(new, old);
+  end if;
+  if old.role = 'owner' and (tg_op = 'DELETE' or new.role <> 'owner') then
+    perform 1 from public.organizations o where o.id = old.organization_id for update;
   end if;
   if old.role = 'owner'
      and (tg_op = 'DELETE' or new.role <> 'owner')
@@ -232,7 +239,7 @@ set search_path = ''
 as $$
 begin
   insert into public.profiles (id, email, display_name)
-  values (new.id, new.email, nullif(new.raw_user_meta_data ->> 'display_name', ''))
+  values (new.id, new.email, left(nullif(btrim(new.raw_user_meta_data ->> 'display_name'), ''), 200))
   on conflict (id) do nothing;
   return new;
 end;
@@ -301,13 +308,10 @@ create policy organizations_update on public.organizations
 
 create policy memberships_select on public.memberships
   for select to authenticated using (private.is_member(organization_id));
--- Admins manage members; only owners create, change or remove owner rows.
-create policy memberships_insert on public.memberships
-  for insert to authenticated
-  with check (
-    private.is_admin(organization_id)
-    and (role <> 'owner' or private.is_owner(organization_id))
-  );
+-- Nobody adds another person with a signed-in session: that would let anyone pull a stranger into
+-- an organization (and read their profile). A person joins by creating an organization, or through
+-- server code that has checked the invitee accepted (Phase C invite, Phase L team).
+-- Admins change roles; only owners change owner rows.
 create policy memberships_update on public.memberships
   for update to authenticated
   using (
@@ -342,7 +346,7 @@ create policy profiles_update on public.profiles
 revoke all on table public.organizations, public.memberships, public.profiles from anon, authenticated;
 grant select on table public.organizations to authenticated;
 grant update (name, ein, uei, mission, website) on table public.organizations to authenticated;
-grant select, insert, delete on table public.memberships to authenticated;
+grant select, delete on table public.memberships to authenticated;
 grant update (role) on table public.memberships to authenticated;
 grant select on table public.profiles to authenticated;
 grant update (display_name) on table public.profiles to authenticated;

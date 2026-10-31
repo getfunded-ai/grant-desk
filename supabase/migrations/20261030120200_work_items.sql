@@ -88,18 +88,18 @@ create table public.documents (
   organization_id uuid not null references public.organizations (id) on delete cascade,
   grant_id uuid,
   name text not null check (length(btrim(name)) between 1 and 500),
-  -- Object path inside the storage bucket. Phase F starts every path with the organization id.
-  storage_path text not null unique,
+  -- Object path inside the storage bucket; always starts with the organization id, so one
+  -- organization can neither claim nor probe another's paths.
+  storage_path text not null check (storage_path like organization_id::text || '/_%'),
   mime_type text,
   size_bytes bigint check (size_bytes >= 0),
   version integer not null default 1 check (version >= 1),
   created_by uuid references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade
+  foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
+  unique (organization_id, storage_path)
 );
-
-create index documents_organization on public.documents (organization_id);
 create index documents_grant on public.documents (grant_id);
 
 -- Notes ------------------------------------------------------------------------------------------

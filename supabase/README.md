@@ -27,7 +27,9 @@ node scripts/db/join-demo-org.mjs you@example.com   # after signing in locally o
 - Work items: `external_feeds`, `deadlines`, `tasks`, `documents`, `notes`, `boilerplate`.
 
 Security: every table has row-level security; tenant rows are visible to members of their
-organization only; viewers read, editors write, admins delete grants and funders and manage members.
+organization only; viewers read, editors write, admins delete grants and funders and change
+members' roles. Nobody adds another person with a signed-in session: members join through
+`create_organization` or through server code that has checked the invitee accepted.
 The `anon` role has no privileges at all. Child rows reference their parent through
 `(organization_id, id)`, so nothing can be attached across organizations. Helpers live in the
 schema `private`, which the Data API does not expose.

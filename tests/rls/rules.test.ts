@@ -69,45 +69,49 @@ describe("members and roles", () => {
     expect(rows).toEqual([]);
   });
 
-  it("an admin cannot create an owner or change an owner", async () => {
-    const admin = await createUser(db, `admin-${randomUUID()}@example.test`);
-    await insertRow(db, "memberships", {
-      organization_id: world.A.id,
-      user_id: admin,
-      role: "admin",
-    });
-    const { insert, update } = await asUser(admin, async () => ({
-      insert: await attempt(
-        db,
-        ...insertSql("memberships", {
-          organization_id: world.A.id,
-          user_id: world.nina,
-          role: "owner",
-        }),
-      ),
-      update: await attempt(
-        db,
-        "update public.memberships set role = 'viewer' where user_id = $1 and organization_id = $2 returning id",
-        [world.alice, world.A.id],
-      ),
-    }));
-    expect(insert.error?.message).toMatch(/row-level security/);
-    expect(update.rows).toEqual([]);
-    await db.query("delete from public.memberships where user_id = $1", [admin]);
-  });
-
-  it("an admin can add an editor and an owner can add an owner", async () => {
+  it("nobody adds a member with a signed-in session, not even an owner", async () => {
+    // Otherwise anyone could pull a stranger into an organization they never chose to join.
     const result = await asUser(world.alice, () =>
       attempt(
         db,
         ...insertSql("memberships", {
           organization_id: world.A.id,
           user_id: world.nina,
-          role: "owner",
+          role: "viewer",
         }),
       ),
     );
-    expect(result.error).toBeUndefined();
+    expect(result.error?.message).toMatch(/permission denied/);
+  });
+
+  it("an admin changes members' roles but cannot touch an owner", async () => {
+    const admin = await createUser(db, `admin-${randomUUID()}@example.test`);
+    await insertRow(db, "memberships", {
+      organization_id: world.A.id,
+      user_id: admin,
+      role: "admin",
+    });
+    const { editor, owner, promote } = await asUser(admin, async () => ({
+      editor: await attempt(
+        db,
+        "update public.memberships set role = 'editor' where user_id = $1 and organization_id = $2 returning id",
+        [world.amy, world.A.id],
+      ),
+      owner: await attempt(
+        db,
+        "update public.memberships set role = 'viewer' where user_id = $1 and organization_id = $2 returning id",
+        [world.alice, world.A.id],
+      ),
+      promote: await attempt(
+        db,
+        "update public.memberships set role = 'owner' where user_id = $1 and organization_id = $2 returning id",
+        [world.amy, world.A.id],
+      ),
+    }));
+    await db.query("delete from public.memberships where user_id = $1", [admin]);
+    expect(editor.rows).toHaveLength(1);
+    expect(owner.rows).toEqual([]);
+    expect(promote.error?.message).toMatch(/row-level security/);
   });
 
   it("the last owner cannot leave or step down", async () => {
@@ -143,7 +147,7 @@ describe("members and roles", () => {
     const ids = await asUser(world.alice, async () =>
       (await db.query<{ id: string }>("select id from public.profiles")).map((r) => r.id),
     );
-    expect(ids.sort()).toEqual([world.alice, world.amy].sort());
+    expect(ids.sort()).toEqual([world.alice, world.amy, world.ed].sort());
   });
 
   it("a person can change their display name but not their email", async () => {
@@ -292,7 +296,9 @@ describe("the proposals ledger (AI and agents propose, people decide)", () => {
         }),
       ),
     );
-    expect(result.error?.message).toMatch(/row-level security|starts as proposed/);
+    expect(result.error?.message).toMatch(
+      /permission denied|row-level security|starts as proposed/,
+    );
   });
 
   it("a person decides once and the decision is stamped", async () => {
@@ -405,6 +411,70 @@ describe("the activity log", () => {
     }));
     expect(edit.error?.message).toMatch(/permission denied/);
     expect(del.error?.message).toMatch(/permission denied/);
+  });
+});
+
+describe("ledger and log times come from the database", () => {
+  it.each(["activity_log", "proposals"] as const)(
+    "a person cannot back-date or pick the id of %s",
+    async (table) => {
+      const { dated, withId } = await asUser(world.alice, async () => ({
+        dated: await attempt(
+          db,
+          ...insertSql(table, {
+            ...rowFor(table, world.A, world.alice),
+            created_at: "2020-01-01T00:00:00Z",
+          }),
+        ),
+        withId: await attempt(
+          db,
+          ...insertSql(table, { ...rowFor(table, world.A, world.alice), id: randomUUID() }),
+        ),
+      }));
+      expect(dated.error?.message).toMatch(/permission denied/);
+      expect(withId.error?.message).toMatch(/permission denied/);
+    },
+  );
+});
+
+describe("document paths", () => {
+  it("a document path must start with its own organization's id", async () => {
+    const { theirs, mine } = await asUser(world.alice, async () => ({
+      theirs: await attempt(
+        db,
+        ...insertSql("documents", {
+          ...rowFor("documents", world.A, world.alice),
+          storage_path: `${world.B.id}/x.pdf`,
+        }),
+      ),
+      mine: await attempt(
+        db,
+        ...insertSql("documents", {
+          ...rowFor("documents", world.A, world.alice),
+          storage_path: `${world.A.id}/x.pdf`,
+        }),
+      ),
+    }));
+    expect(theirs.error?.message).toMatch(/check constraint/);
+    expect(mine.error).toBeUndefined();
+  });
+});
+
+describe("sign-up", () => {
+  it("a very long display name is shortened, not a failed sign-up", async () => {
+    const id = randomUUID();
+    await db.exec("savepoint signup");
+    await db.query("insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)", [
+      id,
+      "long@example.test",
+      JSON.stringify({ display_name: "x".repeat(500) }),
+    ]);
+    const [profile] = await db.query<{ n: number }>(
+      "select length(display_name)::int as n from public.profiles where id = $1",
+      [id],
+    );
+    await db.exec("rollback to savepoint signup; release savepoint signup");
+    expect(profile.n).toBe(200);
   });
 });
 

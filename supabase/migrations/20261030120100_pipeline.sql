@@ -401,9 +401,15 @@ from anon, authenticated;
 grant select, insert, update, delete on table public.funders, public.opportunities, public.grants
   to authenticated;
 grant select on table public.grant_stage_history to authenticated;
-grant select, insert on table public.proposals to authenticated;
+-- Ledger and log rows take their id and time from the database, never from the caller, so nobody can
+-- back-date a line or a proposal.
+grant select on table public.proposals to authenticated;
+grant insert (organization_id, grant_id, tool_name, summary, payload, model, sources, proposed_by)
+  on table public.proposals to authenticated;
 grant update (status) on table public.proposals to authenticated;
-grant select, insert on table public.activity_log to authenticated;
+grant select on table public.activity_log to authenticated;
+grant insert (organization_id, grant_id, actor_kind, actor_id, action, summary, details)
+  on table public.activity_log to authenticated;
 
 grant all on table public.funders, public.opportunities, public.grants, public.grant_stage_history,
   public.proposals, public.activity_log

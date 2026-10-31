@@ -1,5 +1,7 @@
 // Two organizations with one row in every tenant table, created as the table owner (no RLS).
-// People: alice owns A, amy is a viewer in A, bob owns B, nina belongs to nothing.
+// People: alice owns A, amy is a viewer and ed an editor in A, bob owns B, bea is an editor in B,
+// nina belongs to nothing. Each organization has a non-owner member, so a broken memberships policy
+// shows up instead of hiding behind the last-owner rule.
 
 import { randomUUID } from "node:crypto";
 
@@ -39,6 +41,8 @@ export interface Org {
 export interface World {
   alice: string;
   amy: string;
+  ed: string;
+  bea: string;
   bob: string;
   nina: string;
   A: Org;
@@ -190,12 +194,16 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
 export async function buildWorld(db: Db): Promise<World> {
   const alice = await createUser(db, "alice@example.test");
   const amy = await createUser(db, "amy@example.test");
+  const ed = await createUser(db, "ed@example.test");
+  const bea = await createUser(db, "bea@example.test");
   const bob = await createUser(db, "bob@example.test");
   const nina = await createUser(db, "nina@example.test");
 
   const aId = await createOrg(db, "Org A", alice);
   const bId = await createOrg(db, "Org B", bob);
   await insertRow(db, "memberships", { organization_id: aId, user_id: amy, role: "viewer" });
+  await insertRow(db, "memberships", { organization_id: aId, user_id: ed, role: "editor" });
+  await insertRow(db, "memberships", { organization_id: bId, user_id: bea, role: "editor" });
 
   const A = await fillOrg(db, aId, alice);
   const B = await fillOrg(db, bId, bob);
@@ -208,5 +216,5 @@ export async function buildWorld(db: Db): Promise<World> {
     external_id: randomUUID(),
   });
 
-  return { alice, amy, bob, nina, A, B, catalogOpportunityId: catalog.id as string };
+  return { alice, amy, ed, bob, bea, nina, A, B, catalogOpportunityId: catalog.id as string };
 }
