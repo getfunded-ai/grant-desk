@@ -438,25 +438,64 @@ describe("ledger and log times come from the database", () => {
 });
 
 describe("document paths", () => {
-  it("a document path must start with its own organization's id", async () => {
-    const { theirs, mine } = await asUser(world.alice, async () => ({
-      theirs: await attempt(
+  it.each([
+    ["another organization's folder", (a: string, b: string) => `${b}/x.pdf`],
+    ["a dot-dot segment", (a: string, b: string) => `${a}/../${b}/x.pdf`],
+    ["an encoded dot-dot segment", (a: string, b: string) => `${a}/%2e%2e/${b}/x.pdf`],
+    ["backslashes", (a: string, b: string) => `${a}/..\\${b}\\x.pdf`],
+    ["an empty segment", (a: string) => `${a}//x.pdf`],
+    ["no file name", (a: string) => `${a}/`],
+  ])("refuses a path with %s", async (_label, path) => {
+    const result = await asUser(world.alice, () =>
+      attempt(
         db,
         ...insertSql("documents", {
           ...rowFor("documents", world.A, world.alice),
-          storage_path: `${world.B.id}/x.pdf`,
+          storage_path: path(world.A.id, world.B.id),
         }),
       ),
-      mine: await attempt(
+    );
+    expect(result.error?.message).toMatch(/check constraint/);
+  });
+
+  it("accepts a plain path inside its own organization's folder", async () => {
+    const result = await asUser(world.alice, () =>
+      attempt(
         db,
         ...insertSql("documents", {
           ...rowFor("documents", world.A, world.alice),
-          storage_path: `${world.A.id}/x.pdf`,
+          storage_path: `${world.A.id}/grants/narrative.v2.pdf`,
         }),
       ),
-    }));
-    expect(theirs.error?.message).toMatch(/check constraint/);
-    expect(mine.error).toBeUndefined();
+    );
+    expect(result.error).toBeUndefined();
+  });
+
+  it("an editor cannot move a document's path into another folder later", async () => {
+    const result = await asUser(world.alice, () =>
+      attempt(db, "update public.documents set storage_path = $1 where id = $2", [
+        `${world.A.id}/../${world.B.id}/x.pdf`,
+        world.A.rows.documents,
+      ]),
+    );
+    expect(result.error?.message).toMatch(/check constraint/);
+  });
+});
+
+describe("the creator columns default to the signed-in person", () => {
+  it("an insert that leaves them out is stamped with the caller", async () => {
+    const rows = await asUser(world.alice, () =>
+      db.query<{ created_by: string; proposed_by: string; actor_id: string }>(
+        `with f as (insert into public.funders (organization_id, name) values ($1, 'No creator given') returning created_by),
+              p as (insert into public.proposals (organization_id, tool_name, summary) values ($1, 'test', 'No proposer given') returning proposed_by),
+              l as (insert into public.activity_log (organization_id, actor_kind, action, summary) values ($1, 'person', 'test', 'No actor given') returning actor_id)
+         select f.created_by, p.proposed_by, l.actor_id from f, p, l`,
+        [world.A.id],
+      ),
+    );
+    expect(rows).toEqual([
+      { created_by: world.alice, proposed_by: world.alice, actor_id: world.alice },
+    ]);
   });
 });
 

@@ -20,7 +20,7 @@ create table public.external_feeds (
   last_fetched_at timestamptz,
   last_status text,
   last_error text,
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, id),
@@ -43,7 +43,7 @@ create table public.deadlines (
   -- IANA zone the deadline was stated in, for example America/New_York. Null = not stated.
   time_zone text,
   notes text,
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
@@ -69,7 +69,7 @@ create table public.tasks (
   -- Only a member of the same organization can be assigned.
   assignee_id uuid,
   completed_at timestamptz,
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
@@ -88,13 +88,17 @@ create table public.documents (
   organization_id uuid not null references public.organizations (id) on delete cascade,
   grant_id uuid,
   name text not null check (length(btrim(name)) between 1 and 500),
-  -- Object path inside the storage bucket; always starts with the organization id, so one
-  -- organization can neither claim nor probe another's paths.
-  storage_path text not null check (storage_path like organization_id::text || '/_%'),
+  -- Object path inside the storage bucket: the organization id, then plain segments. No "..", "%",
+  -- "\", "?" or "#" and no empty segment, so a path cannot be resolved into another organization's
+  -- folder when server code signs or downloads it.
+  storage_path text not null check (
+    storage_path ~ ('^' || organization_id::text || '(/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$')
+    and storage_path !~ '\.\.'
+  ),
   mime_type text,
   size_bytes bigint check (size_bytes >= 0),
   version integer not null default 1 check (version >= 1),
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
@@ -110,7 +114,7 @@ create table public.notes (
   grant_id uuid,
   funder_id uuid,
   body text not null check (length(btrim(body)) >= 1),
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
@@ -130,7 +134,7 @@ create table public.boilerplate (
   body text not null,
   category text,
   tags text[] not null default '{}',
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

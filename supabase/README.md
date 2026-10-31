@@ -31,7 +31,9 @@ organization only; viewers read, editors write, admins delete grants and funders
 members' roles. Nobody adds another person with a signed-in session: members join through
 `create_organization` or through server code that has checked the invitee accepted.
 The `anon` role has no privileges at all. Child rows reference their parent through
-`(organization_id, id)`, so nothing can be attached across organizations. Helpers live in the
+`(organization_id, id)`, so nothing can be attached across organizations. A document's storage
+path must be its organization's id followed by plain segments (no `..`), so it cannot reach
+another organization's folder. Helpers live in the
 schema `private`, which the Data API does not expose.
 
 ## A new migration

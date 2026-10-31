@@ -63,7 +63,7 @@ create table public.organizations (
   uei text check (uei ~ '^[A-Z0-9]{12}$'),
   mission text,
   website text,
-  created_by uuid references auth.users (id) on delete set null,
+  created_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -211,7 +211,7 @@ begin
     return coalesce(new, old);
   end if;
   if old.role = 'owner' and (tg_op = 'DELETE' or new.role <> 'owner') then
-    perform 1 from public.organizations o where o.id = old.organization_id for update;
+    perform 1 from public.organizations o where o.id = old.organization_id for no key update;
   end if;
   if old.role = 'owner'
      and (tg_op = 'DELETE' or new.role <> 'owner')
