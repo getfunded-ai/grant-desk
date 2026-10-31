@@ -16,11 +16,12 @@ import {
   createOrganization as insertOrganization,
   findUserIdByEmail,
   getRole,
-  INVITER_ROLES,
   listMyOrganizations,
   updateDisplayName,
 } from "./org-store";
+import { acceptPendingInvitation, type AcceptResult } from "./invitation-accept";
 import { getRequestOrigin } from "./origin";
+import { INVITER_ROLES } from "./roles";
 import { APP_HOME_PATH, ONBOARDING_PATH, safeNextPath, SIGN_IN_PATH } from "./routes";
 import { ACTIVE_ORG_COOKIE, requireUser } from "./session";
 
@@ -209,29 +210,47 @@ export async function inviteTeammate(_prev: FormState, formData: FormData): Prom
  * Accept an invitation waiting on the signed-in person's account. The invitation is read from the
  * account on the server (never from the form), and the inviter must still be an owner or admin.
  */
-export async function acceptInvitation(organizationId: string): Promise<void> {
+export async function acceptInvitation(organizationId: string): Promise<FormState> {
   const user = await requireUser();
   const admin = createAdminClient();
-  if (!admin) return;
+  if (!admin) return NOT_CONFIGURED;
 
-  const invitation = await findPendingInvitation(admin, user.id, organizationId);
-  if (!invitation) return;
-  const inviterRole = await getRole(admin, invitation.organizationId, invitation.invitedBy);
-  if (inviterRole && INVITER_ROLES.includes(inviterRole)) {
-    await addMember(admin, invitation.organizationId, user.id, invitation.role);
-    await setActiveOrganization(invitation.organizationId);
+  let result: AcceptResult;
+  try {
+    result = await acceptPendingInvitation({
+      find: () => findPendingInvitation(admin, user.id, organizationId),
+      inviterRole: (invitation) => getRole(admin, invitation.organizationId, invitation.invitedBy),
+      addMember: (invitation) =>
+        addMember(admin, invitation.organizationId, user.id, invitation.role),
+      remove: (invitation) => removePendingInvitation(admin, user.id, invitation.organizationId),
+    });
+  } catch (error) {
+    console.error("acceptInvitation failed", error);
+    return { status: "error", message: "We could not accept the invitation. Try again." };
   }
-  // Accepted, or the inviter can no longer invite: either way the invitation is used up.
-  await removePendingInvitation(admin, user.id, invitation.organizationId);
   revalidatePath("/", "layout");
+  if (result === "joined") {
+    await setActiveOrganization(organizationId);
+    return { status: "success", message: "Joined." };
+  }
+  return {
+    status: "error",
+    message: "This invitation is no longer valid. Ask for a new one.",
+  };
 }
 
-export async function declineInvitation(organizationId: string): Promise<void> {
+export async function declineInvitation(organizationId: string): Promise<FormState> {
   const user = await requireUser();
   const admin = createAdminClient();
-  if (!admin) return;
-  await removePendingInvitation(admin, user.id, organizationId);
+  if (!admin) return NOT_CONFIGURED;
+  try {
+    await removePendingInvitation(admin, user.id, organizationId);
+  } catch (error) {
+    console.error("declineInvitation failed", error);
+    return { status: "error", message: "We could not decline the invitation. Try again." };
+  }
   revalidatePath("/", "layout");
+  return { status: "success", message: "Declined." };
 }
 
 /** Switch the organization the person is working in. Only organizations they belong to are accepted. */

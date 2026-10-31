@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { countMembers, INVITER_ROLES } from "@/lib/auth/org-store";
+import { countMembers } from "@/lib/auth/org-store";
+import { INVITER_ROLES } from "@/lib/auth/roles";
 import { requireActiveOrganization } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { InviteForm } from "./invite-form";

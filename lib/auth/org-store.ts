@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { InvitedRole, Role } from "./roles";
 
 /**
  * The only file in Phase C that names database tables and functions (organizations, memberships,
@@ -8,7 +9,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * where the parameter is named `admin`: those need the service-key client and a checked caller.
  */
 
-export type Role = "owner" | "admin" | "editor" | "viewer";
 export type OrganizationSummary = {
   id: string;
   name: string;
@@ -16,9 +16,6 @@ export type OrganizationSummary = {
   /** When this person joined. The oldest membership is the default organization. */
   joinedAt: string;
 };
-
-/** Roles that may invite teammates in Phase C. Phase L owns the full permission model. */
-export const INVITER_ROLES: readonly Role[] = ["owner", "admin"];
 
 export async function listMyOrganizations(
   user: SupabaseClient,
@@ -129,7 +126,7 @@ export async function addMember(
   admin: SupabaseClient,
   organizationId: string,
   userId: string,
-  role: Exclude<Role, "owner">,
+  role: InvitedRole,
 ): Promise<"added" | "exists"> {
   const { error } = await admin
     .from("memberships")

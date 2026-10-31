@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Role } from "./org-store";
+import type { InvitedRole } from "./roles";
 
 /**
  * Pending invitations, kept on the invited person's account in Supabase Auth `app_metadata` until
@@ -8,13 +8,20 @@ import type { Role } from "./org-store";
  * themselves into an organization. Nobody joins an organization without accepting.
  *
  * This is a stopgap: Phase B has no invitations table. Phase L (Team) replaces it with one.
+ * Limits, because app_metadata travels in every session token and cookie: at most
+ * MAX_PENDING_INVITATIONS per account (the oldest drops off) and a shortened organization name, so
+ * nobody can grow someone else's cookie by sending many invitations. Two writes at the same moment
+ * can still overwrite each other; the inviter then sends the invitation again.
  */
+
+export const MAX_PENDING_INVITATIONS = 5;
+const MAX_NAME_LENGTH = 80;
 
 export type PendingInvitation = {
   organizationId: string;
   /** Shown to the invited person, copied at invite time. */
   organizationName: string;
-  role: Exclude<Role, "owner">;
+  role: InvitedRole;
   invitedBy: string;
   invitedAt: string;
 };
@@ -51,15 +58,30 @@ async function saveInvitations(admin: SupabaseClient, userId: string, list: Pend
   if (error) throw new Error(`Could not save the invitation: ${error.message}`);
 }
 
-/** Record an invitation, replacing an older one to the same organization. */
+/**
+ * The list with this invitation added: it replaces an older one to the same organization, the name
+ * is shortened, and only the newest MAX_PENDING_INVITATIONS are kept.
+ */
+export function withInvitation(
+  list: PendingInvitation[],
+  invitation: PendingInvitation,
+): PendingInvitation[] {
+  const others = list.filter((item) => item.organizationId !== invitation.organizationId);
+  const added = {
+    ...invitation,
+    organizationName: invitation.organizationName.slice(0, MAX_NAME_LENGTH),
+  };
+  return [...others, added].slice(-MAX_PENDING_INVITATIONS);
+}
+
+/** Record an invitation on the invited person's account. */
 export async function addPendingInvitation(
   admin: SupabaseClient,
   userId: string,
   invitation: PendingInvitation,
 ): Promise<void> {
   const list = await loadInvitations(admin, userId);
-  const others = list.filter((item) => item.organizationId !== invitation.organizationId);
-  await saveInvitations(admin, userId, [...others, invitation]);
+  await saveInvitations(admin, userId, withInvitation(list, invitation));
 }
 
 /** The invitation to one organization waiting on this account, or null. */

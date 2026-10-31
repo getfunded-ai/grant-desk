@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const { readPendingInvitations } = await import("../../lib/auth/invitations");
+const { MAX_PENDING_INVITATIONS, readPendingInvitations, withInvitation } =
+  await import("../../lib/auth/invitations");
+type PendingInvitation = import("../../lib/auth/invitations").PendingInvitation;
 
-const valid = {
+const valid: PendingInvitation = {
   organizationId: "org-1",
   organizationName: "Alpha",
   role: "editor",
@@ -38,5 +40,26 @@ describe("readPendingInvitations", () => {
       "org-1",
     ];
     expect(readPendingInvitations({ pending_invitations: [...broken, valid] })).toEqual([valid]);
+  });
+});
+
+describe("withInvitation", () => {
+  const invite = (n: number) => ({ ...valid, organizationId: `org-${n}`, invitedAt: `t${n}` });
+
+  it("replaces an older invitation to the same organization", () => {
+    const newer = { ...valid, invitedAt: "later" };
+    expect(withInvitation([valid], newer)).toEqual([newer]);
+  });
+
+  it("keeps only the newest invitations, so nobody can grow another person's cookie", () => {
+    let list: PendingInvitation[] = [];
+    for (let n = 0; n < 50; n++) list = withInvitation(list, invite(n));
+    expect(list).toHaveLength(MAX_PENDING_INVITATIONS);
+    expect(list.at(-1)?.organizationId).toBe("org-49");
+  });
+
+  it("shortens a long organization name", () => {
+    const [stored] = withInvitation([], { ...valid, organizationName: "x".repeat(500) });
+    expect(stored.organizationName.length).toBeLessThanOrEqual(80);
   });
 });
