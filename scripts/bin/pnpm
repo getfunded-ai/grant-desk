@@ -1,0 +1,6 @@
+#!/bin/sh
+# The pnpm launcher at /usr/local/bin/pnpm has no shebang line, so tools that
+# spawn "pnpm" directly (create-next-app, shadcn) fail with ENOEXEC on this Mac.
+# Put this folder first on PATH for those tools only:
+#   PATH="$PWD/scripts/bin:$PATH" pnpm dlx shadcn@latest add button
+exec /usr/local/bin/pnpm "$@"

@@ -1,0 +1,65 @@
+name: PR checks
+
+# Fast checks for every pull request into main: typecheck, lint, build.
+# Tests run only when a pull request touches the folders the testing policy
+# allows tests for (sign-in, money, RLS, migrations, deletion). The full suite
+# runs once a week in weekly-tests.yml.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-checks:
+    name: pr-checks
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - name: Decide whether the allowed tests must run
+        id: critical
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --paginate --jq '.[] | .filename, (.previous_filename // empty)' > /tmp/changed.txt
+          # The testing policy's exception folders: sign-in, money, RLS, database, migrations,
+          # deletion and transfer. Keep in step with the high tier in .github/risk-tiers.yml.
+          if grep -Eq '^(tests/|supabase/|lib/(auth|billing|db|deletion|permissions|portfolio|rls|supabase|transfer)/|app/\((auth|portfolio)\)/|app/\(app\)/settings/(delete|transfer)/|app/api/(webhooks|billing)/|proxy\.ts$|middleware\.ts$)' /tmp/changed.txt; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: A change to these folders must bring its own test
+        if: steps.critical.outputs.run == 'true'
+        run: |
+          if ! grep -Eq '^tests/.+\.test\.ts$' /tmp/changed.txt; then
+            echo "::error::This pull request changes sign-in, money, RLS, database, migration, deletion or transfer code but adds or changes no test under tests/. The testing policy requires one."
+            exit 1
+          fi
+      - name: Allowed tests (sign-in, money, RLS, migrations, deletion)
+        if: steps.critical.outputs.run == 'true'
+        # Fixed arguments, not the package script, so a pull request cannot loosen what runs.
+        # vitest.config.* is high tier, so only Zach can change the config.
+        # With no test files vitest exits 1, so an empty tests/ folder never passes.
+        run: pnpm exec vitest run tests

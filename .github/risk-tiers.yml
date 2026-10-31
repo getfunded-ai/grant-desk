@@ -1,0 +1,75 @@
+# Risk tiers for pull requests.
+# Read from the base branch by .github/workflows/risk-tier.yml, never from the
+# pull request. Highest matching tier wins. Changing this file is itself high tier.
+
+default: low
+merge:
+  low: auto # merges itself once pr-checks, risk-tier and review-gate pass
+  medium: auto # same, and the agent runs a deeper self-review before opening the PR
+  high: human # Zach merges by hand after reading the CEO summary
+tiers:
+  high:
+    # Guardrail files
+    - ".github/**"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "REVIEW.md"
+    - "CODEOWNERS"
+    - "LICENSE"
+    - "tools/**"
+    - "docs/plan/**"
+    - "scripts/gen_phases.py"
+    - ".claude/**"
+    - ".npmrc"
+    - ".gitignore"
+    # Database structure and security
+    - "supabase/migrations/**"
+    - "supabase/config.toml"
+    - "lib/db/**"
+    - "lib/permissions/**"
+    - "lib/rls/**"
+    - "tests/**"
+    - "vitest.config.*"
+    # Sign-in and session
+    - "lib/auth/**"
+    - "lib/supabase/**"
+    - "app/(auth)/**"
+    - "proxy.ts"
+    - "middleware.ts"
+    # Money
+    - "lib/billing/**"
+    - "app/api/billing/**"
+    - "app/api/webhooks/**"
+    # Data deletion, cross-organization access, transfer
+    - "lib/deletion/**"
+    - "lib/transfer/**"
+    - "app/(app)/settings/delete/**"
+    - "app/(app)/settings/transfer/**"
+    - "lib/portfolio/**"
+    - "app/(portfolio)/**"
+    # First public-facing surfaces and anything that posts publicly
+    - "app/(marketing)/**"
+    - "app/grants/**"
+    - "app/funders/**"
+    - "app/sitemap.ts"
+    - "app/robots.ts"
+    - "app/(app)/admin/**"
+    - "lib/distribution/**"
+    - "app/api/cron/distribution/**"
+    - "content/launch/**"
+    # Hosting
+    - "vercel.json"
+  medium:
+    - "app/**"
+    - "components/**"
+    - "lib/**"
+    - "supabase/**"
+    - "scripts/**"
+    - "content/**"
+    - "package.json"
+    - "pnpm-lock.yaml"
+    - "pnpm-workspace.yaml"
+    - "next.config.ts"
+    - "tsconfig.json"
+    - "eslint.config.mjs"
+    - ".env.example"

@@ -1,0 +1,178 @@
+name: Risk tier
+
+# Labels every pull request with its risk tier from .github/risk-tiers.yml,
+# keeps one sticky comment up to date, and arms auto-merge for low and medium
+# tiers. High tier waits for Zach. Copied from Roman-War with the rule names of
+# this repo (AGENTS.md instead of CLAUDE.md).
+#
+# It then posts a "risk-tier" commit status on the PR's head commit. The status
+# is posted only after auto-merge has been armed or disarmed for that commit, so
+# when main requires "risk-tier", a push that turns a PR high tier cannot merge
+# on the old auto-merge before this job switches it off.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: write
+  issues: write
+  statuses: write
+
+concurrency:
+  group: risk-tier-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  risk-tier:
+    # The job's own check is named "Risk tier runner" so it never collides with
+    # the "risk-tier" status this job publishes.
+    name: Risk tier runner
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      PR_NODE_ID: ${{ github.event.pull_request.node_id }}
+      PR_DRAFT: ${{ github.event.pull_request.draft }}
+    steps:
+      # SECURITY: pull_request_target runs with a write token, so this job checks
+      # out ONLY the base commit (the main the PR targets). It never checks out or
+      # executes code from the pull request head. The rules file and the tier tool
+      # therefore always come from main, and a PR cannot change its own tier.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+
+      - name: List the files the pull request changes
+        run: |
+          gh api "repos/${GH_REPO}/pulls/${PR_NUMBER}/files" --paginate --jq '.[] | .filename, (.previous_filename // empty)' > /tmp/changed-files.txt
+          # A rename lists both names, so moving a guardrail file away still counts as touching it.
+          echo "Changed files:"
+          cat /tmp/changed-files.txt
+
+      - name: Classify
+        id: classify
+        run: |
+          python3 tools/risk_tier.py --rules .github/risk-tiers.yml --files /tmp/changed-files.txt > /tmp/tier.json
+          cat /tmp/tier.json
+          echo "tier=$(jq -r .tier /tmp/tier.json)" >> "$GITHUB_OUTPUT"
+          echo "merge=$(jq -r .merge /tmp/tier.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Set the tier label
+        env:
+          TIER: ${{ steps.classify.outputs.tier }}
+        run: |
+          gh label create "tier:low"    --color 0e8a16 --description "Risk tier: merges itself once checks pass" --force
+          gh label create "tier:medium" --color fbca04 --description "Risk tier: merges itself after a deeper self-review" --force
+          gh label create "tier:high"   --color b60205 --description "Risk tier: guardrail files, Zach merges by hand" --force
+          REMOVE=""
+          for t in low medium high; do
+            if [ "$t" != "$TIER" ]; then
+              REMOVE="${REMOVE:+$REMOVE,}tier:$t"
+            fi
+          done
+          gh pr edit "$PR_NUMBER" --add-label "tier:$TIER" --remove-label "$REMOVE"
+
+      - name: Arm or disarm auto-merge
+        env:
+          MERGE: ${{ steps.classify.outputs.merge }}
+        run: |
+          # Auto-merge is armed through the GitHub API rather than `gh pr merge --auto`
+          # because gh merges at once when the PR is already "clean", which it is
+          # whenever main has no required status checks yet. The API call only ever
+          # waits for the checks; if GitHub refuses it we warn and leave the PR alone.
+          ARMED=$(gh pr view "$PR_NUMBER" --json autoMergeRequest --jq '.autoMergeRequest != null')
+          : > /tmp/automerge.txt
+          if [ "$MERGE" = "auto" ] && [ "$PR_DRAFT" != "true" ]; then
+            if [ "$ARMED" = "true" ]; then
+              echo "Auto-merge is armed: the PR merges itself (squash) once pr-checks, risk-tier and review-gate are green." | tee /tmp/automerge.txt
+            elif OUT=$(gh api graphql -f pr="$PR_NODE_ID" -f query='
+                mutation($pr: ID!) {
+                  enablePullRequestAutoMerge(input: {pullRequestId: $pr, mergeMethod: SQUASH}) {
+                    clientMutationId
+                  }
+                }' 2>&1); then
+              echo "Auto-merge is armed: the PR merges itself (squash) once pr-checks, risk-tier and review-gate are green." | tee /tmp/automerge.txt
+            else
+              echo "::warning::Could not arm auto-merge: $OUT"
+              echo "Auto-merge could not be armed yet (usually 'Allow auto-merge' is off in the repository settings, or main has no required status checks). See the Risk tier workflow log. Zach merges by hand once the checks are green." > /tmp/automerge.txt
+            fi
+          elif [ "$MERGE" = "human" ] && [ "$ARMED" = "true" ]; then
+            if gh pr merge "$PR_NUMBER" --disable-auto; then
+              echo "Auto-merge was armed earlier and is now switched off: this PR is high tier." | tee /tmp/automerge.txt
+            else
+              echo "::error::Could not disarm auto-merge on a high-tier PR; check it by hand."
+              echo "Auto-merge is still armed on this high-tier PR and could not be switched off. Zach: switch it off by hand, then rerun the Risk tier workflow." > /tmp/automerge.txt
+              touch /tmp/disarm-failed
+            fi
+          elif [ "$PR_DRAFT" = "true" ]; then
+            echo "Draft: auto-merge is armed when the PR is marked ready for review." | tee /tmp/automerge.txt
+          fi
+
+      - name: Upsert the sticky comment
+        run: |
+          python3 - <<'PY' > /tmp/comment.md
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("/tmp/tier.json").read_text())
+          tier, merge = data["tier"], data["merge"]
+          lines = ["<!-- risk-tier -->", f"## Risk tier: {tier} (merge: {merge})", ""]
+          if merge == "human":
+              lines.append("High tier: Zach merges this one by hand after reading the CEO summary and the review findings.")
+          elif tier == "medium":
+              lines.append("Medium tier: merges itself once `pr-checks`, `risk-tier` and `review-gate` are green. "
+                           "The agent runs the self-review at high effort before opening a medium PR "
+                           "and names the AGENTS.md rules it checked in \"Verified by\".")
+          else:
+              lines.append("Low tier: merges itself once `pr-checks`, `risk-tier` and `review-gate` are green.")
+          lines.append("")
+          rows = [(t, m) for t in ("high", "medium") for m in data.get("matched", {}).get(t, [])]
+          if rows:
+              lines.append("Rules matched:")
+              for t, m in rows:
+                  files = ", ".join(f"`{f}`" for f in m["files"])
+                  lines.append(f"- {t}: `{m['rule']}` -> {files}")
+          else:
+              lines.append("No high or medium rule matched; the default tier applies.")
+          if "error" in data:
+              lines += ["", f"Rules file problem (tier set to the safe default): {data['error']}"]
+          note = Path("/tmp/automerge.txt").read_text().strip()
+          if note:
+              lines += ["", note]
+          lines += ["", "Set by the Risk tier workflow from `.github/risk-tiers.yml` on the base branch. "
+                        "Highest matching tier wins. Do not edit the tier labels by hand."]
+          print("\n".join(lines))
+          PY
+          cat /tmp/comment.md
+          COMMENT_ID=$(gh api "repos/${GH_REPO}/issues/${PR_NUMBER}/comments" --paginate \
+            --jq '.[] | select(.body | contains("<!-- risk-tier -->")) | .id' | head -n1)
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/${GH_REPO}/issues/comments/${COMMENT_ID}" -F body=@/tmp/comment.md --silent
+          else
+            gh api -X POST "repos/${GH_REPO}/issues/${PR_NUMBER}/comments" -F body=@/tmp/comment.md --silent
+          fi
+
+      - name: Report the risk-tier status
+        env:
+          TIER: ${{ steps.classify.outputs.tier }}
+          MERGE: ${{ steps.classify.outputs.merge }}
+        run: |
+          if [ -f /tmp/disarm-failed ]; then
+            exit 1
+          fi
+          if [ "$MERGE" = "human" ]; then
+            DESCRIPTION="Tier ${TIER}: Zach merges by hand"
+          else
+            DESCRIPTION="Tier ${TIER}: merges itself once checks pass"
+          fi
+          gh api -X POST "repos/${GH_REPO}/statuses/${HEAD_SHA}" \
+            -f state=success -f context=risk-tier -f description="$DESCRIPTION" --silent

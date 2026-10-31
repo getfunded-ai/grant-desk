@@ -1,0 +1,29 @@
+name: Weekly tests
+
+# Zach's testing policy (2026-10-08): the full suite runs once a week and when
+# started by hand. It does not run on push or on pull requests. A red run becomes
+# a "Weekly test review" assignment in the command center.
+
+on:
+  schedule:
+    - cron: "0 13 * * 1" # Mondays 13:00 UTC (6 am Pacific)
+  workflow_dispatch:
+
+jobs:
+  weekly-tests:
+    name: weekly-tests
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test

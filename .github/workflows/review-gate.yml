@@ -1,0 +1,47 @@
+name: Review gate
+
+# Publishes the "review-gate" check on the pull request's head commit from the
+# "Independent review evidence" block in the pull request body (Zach's PR review
+# policy, 2026-10-26). The review itself happens inside the authoring agent's own
+# session; this gate only checks that the evidence names the current commit,
+# that no Important finding is left open, and that the CEO summary is present.
+# No AI service is called here.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
+
+permissions:
+  checks: write
+  pull-requests: read
+  contents: read
+
+concurrency:
+  group: review-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-gate:
+    # The job's own check is named "Review gate runner" so it never collides with
+    # the "review-gate" check this job publishes.
+    name: Review gate runner
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      # SECURITY: pull_request_target runs with a write token, so this job checks
+      # out ONLY the base commit. It never checks out or executes code from the
+      # pull request head. The gate script always comes from main.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the evidence block and publish the gate
+        run: |
+          python3 tools/review_gate.py \
+            --repo "${{ github.repository }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --head-sha "${{ github.event.pull_request.head.sha }}"
