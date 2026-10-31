@@ -97,6 +97,7 @@ describe("proxy route protection", () => {
     const redirected = await proxy(request("/sign-in"));
     expect(redirected.status).toBe(307);
     expect(redirected.cookies.get("sb-test-auth-token")?.value).toBe("fresh");
+    expect(redirected.headers.get("cache-control")).toBe("private, no-store");
   });
 
   it("treats a deployment without Supabase settings as signed out", async () => {

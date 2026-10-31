@@ -20,12 +20,12 @@ Locally they go in `.env.local` (never committed). Names are also in `.env.examp
 | -------------------------------------- | ------- | ----------- | -------------------------------------------------------------------- |
 | `NEXT_PUBLIC_SUPABASE_URL`             | no      | agent (set) | Supabase address, used by the browser and the server                 |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | no      | agent (set) | Supabase publishable key; row-level security limits what it can read |
-| `SUPABASE_SECRET_KEY`                  | **yes** | **Zach**    | Server only. Creates organizations and sends teammate invites        |
+| `SUPABASE_SECRET_KEY`                  | **yes** | **Zach**    | Server only. Sends teammate invitations and adds people who accept   |
 | `ERROR_TRACKING`                       | no      | agent (set) | `vercel` writes each server error as one JSON line to Vercel's logs  |
 
 Without the two `NEXT_PUBLIC_` values the app still builds and the public pages work; the sign-in page
-says sign-in is not set up. Without `SUPABASE_SECRET_KEY`, people can sign in but cannot create an
-organization or invite anyone.
+says sign-in is not set up. Without `SUPABASE_SECRET_KEY`, people can sign in and create an
+organization but cannot invite anyone.
 
 To find the secret key: Supabase → project `grant-desk` → Project Settings → API Keys → Secret keys →
 copy the `sb_secret_…` key. Paste it straight into Vercel. Do not send it in chat or email.
@@ -55,9 +55,13 @@ Supabase → project `grant-desk` → Authentication → URL Configuration:
 
 - **Site URL**: `https://grant-desk-iota.vercel.app` (change it when the real domain arrives).
 - **Redirect URLs** → Add URL, one at a time:
-  - `https://grant-desk-*.vercel.app/**` (every preview)
   - `https://grant-desk-iota.vercel.app/**` (production)
   - `http://localhost:3000/**` (local work)
+
+Do not add a wildcard such as `https://grant-desk-*.vercel.app/**`. Anyone can create a
+Vercel project whose address matches it, and a sign-in link sent there would hand them the account.
+To try sign-in on one preview, add that preview's exact address, test, then remove it. A wildcard is
+safe only on a domain Zach owns (for example `https://*.preview.getfunded.ai/**`, Phase J).
 
 ### H-4: sign-in email through Resend (about 20 minutes)
 
@@ -96,6 +100,10 @@ through on the hosted project yet.
 - Pages are protected by default. Public pages are listed in `lib/auth/routes.ts`; a phase that adds a
   public page adds it there. `/api/` routes are let through and must check their own caller.
 - The organization being worked in is a cookie, checked against the person's memberships on every read.
+  Without the cookie it is the organization the person joined first.
+- Invitations need consent. An invitation waits on the invited person's account (Supabase Auth
+  `app_metadata`, which only the server can write) until they press Accept or Decline in the app
+  (`lib/auth/invitations.ts`). Phase L replaces this with an invitations table.
 - Database calls for organizations, memberships and profiles are in `lib/auth/org-store.ts` only.
 
 ## Local development

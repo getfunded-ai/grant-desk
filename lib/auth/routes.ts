@@ -2,6 +2,8 @@
 
 export const SIGN_IN_PATH = "/sign-in";
 export const ONBOARDING_PATH = "/onboarding";
+/** Clears a session cookie Supabase no longer accepts, then shows sign-in. */
+export const SESSION_ENDED_PATH = "/auth/session-ended";
 /** Where a signed-in person lands. Phase E moves this to the pipeline (/grants). */
 export const APP_HOME_PATH = "/settings";
 
@@ -36,7 +38,8 @@ export function redirectFor(pathname: string, search: string, signedIn: boolean)
  * can never be used to bounce someone to another website.
  */
 export function safeNextPath(next: string | null | undefined): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) {
+  // Control characters and spaces are stripped by URL parsing, which can turn `/\t/host` into `//host`.
+  if (!next || !next.startsWith("/") || /[\\\s\u0000-\u001f\u007f]/.test(next)) {
     return APP_HOME_PATH;
   }
   const base = "https://grant-desk.invalid";
@@ -46,6 +49,7 @@ export function safeNextPath(next: string | null | undefined): string {
   } catch {
     return APP_HOME_PATH;
   }
-  if (url.origin !== base) return APP_HOME_PATH;
+  // Check the parsed path too: dot segments can collapse `/.//host` or `/a/..//host` into `//host`.
+  if (url.origin !== base || url.pathname.startsWith("//")) return APP_HOME_PATH;
   return url.pathname + url.search + url.hash;
 }

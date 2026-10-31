@@ -68,6 +68,17 @@ describe("safeNextPath", () => {
     expect(new URL(result, "https://grant-desk.test").origin).toBe("https://grant-desk.test");
   });
 
+  it.each([
+    "/.//evil.example",
+    "/a/..//evil.example",
+    "/%2e%2e//evil.example",
+    "/./\t/evil.example",
+    "/\n/evil.example",
+    "/ /evil.example",
+  ])("rejects %j, which URL parsing would turn into //evil.example", (input) => {
+    expect(safeNextPath(input)).toBe(APP_HOME_PATH);
+  });
+
   it("rejects off-site destinations outright", () => {
     expect(safeNextPath("https://evil.example")).toBe(APP_HOME_PATH);
     expect(safeNextPath("//evil.example")).toBe(APP_HOME_PATH);

@@ -12,7 +12,10 @@ export async function proxy(request: NextRequest) {
   if (!target) return response;
 
   const redirect = NextResponse.redirect(new URL(target, request.url));
+  // Keep a refreshed session, and the no-cache headers Supabase sets with it, on the redirect.
   response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  const cacheControl = response.headers.get("cache-control");
+  if (cacheControl) redirect.headers.set("cache-control", cacheControl);
   return redirect;
 }
 

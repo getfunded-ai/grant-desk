@@ -1,4 +1,4 @@
-import { getProfileName } from "@/lib/auth/org-store";
+import { getDisplayName } from "@/lib/auth/org-store";
 import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "./profile-form";
@@ -8,7 +8,7 @@ export const metadata = { title: "Profile · Grant Desk" };
 export default async function ProfilePage() {
   const user = await requireUser();
   const supabase = await createClient();
-  const fullName = supabase ? await getProfileName(supabase, user.id) : null;
+  const displayName = supabase ? await getDisplayName(supabase, user.id) : null;
   return (
     <div className="max-w-md space-y-6">
       <div className="space-y-2">
@@ -18,7 +18,7 @@ export default async function ProfilePage() {
           and tasks.
         </p>
       </div>
-      <ProfileForm fullName={fullName ?? ""} />
+      <ProfileForm displayName={displayName ?? ""} />
     </div>
   );
 }

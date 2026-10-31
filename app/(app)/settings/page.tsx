@@ -39,7 +39,7 @@ export default async function SettingsPage() {
           <CardTitle>Invite a teammate</CardTitle>
           <CardDescription>
             {canInvite
-              ? "They get an email with a link to join. They join as an editor."
+              ? "They get an email and join as an editor once they accept."
               : "Only an owner or admin can invite people to this organization."}
           </CardDescription>
         </CardHeader>

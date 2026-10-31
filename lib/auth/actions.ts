@@ -1,15 +1,24 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createEmailClient } from "@/lib/supabase/email";
 import { createClient } from "@/lib/supabase/server";
 import {
+  addPendingInvitation,
+  findPendingInvitation,
+  removePendingInvitation,
+} from "./invitations";
+import {
   addMember,
-  createOrganizationWithOwner,
+  createOrganization as insertOrganization,
+  findUserIdByEmail,
+  getRole,
   INVITER_ROLES,
   listMyOrganizations,
-  updateProfileName,
+  updateDisplayName,
 } from "./org-store";
 import { getRequestOrigin } from "./origin";
 import { APP_HOME_PATH, ONBOARDING_PATH, safeNextPath, SIGN_IN_PATH } from "./routes";
@@ -91,17 +100,17 @@ export async function signOut(): Promise<void> {
 
 /** Create an organization with the signed-in person as owner, and switch to it. */
 export async function createOrganization(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await requireUser();
+  await requireUser();
   const name = readName(formData, "name");
   if (name.length < 2 || name.length > 120) {
     return { status: "error", message: "Use a name between 2 and 120 characters." };
   }
-  const admin = createAdminClient();
-  if (!admin) return NOT_CONFIGURED;
+  const supabase = await createClient();
+  if (!supabase) return NOT_CONFIGURED;
 
   let organizationId: string;
   try {
-    organizationId = await createOrganizationWithOwner(admin, user.id, name);
+    organizationId = await insertOrganization(supabase, name);
   } catch (error) {
     console.error("createOrganization failed", error);
     return { status: "error", message: "We could not create the organization. Try again." };
@@ -112,8 +121,10 @@ export async function createOrganization(_prev: FormState, formData: FormData): 
 
 /**
  * Invite one teammate by email into an organization the caller owns or administers.
- * New people get Supabase's invite email. People who already have an account are added and see the
- * organization in their switcher next time they sign in.
+ * Nobody joins without accepting: the invitation waits on the invited person's account (see
+ * lib/auth/invitations.ts) and they accept it in the app. New people get Supabase's invite email;
+ * people who already have an account get a sign-in link. The caller sees the same message either
+ * way, so the form cannot be used to find out who has an account.
  */
 export async function inviteTeammate(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
@@ -138,56 +149,89 @@ export async function inviteTeammate(_prev: FormState, formData: FormData): Prom
     };
   }
 
-  const origin = await getRequestOrigin();
-  const invited = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(APP_HOME_PATH)}`,
-  });
-
-  let invitedUserId: string;
-  let alreadyHadAccount = false;
-  if (invited.data.user) {
-    invitedUserId = invited.data.user.id;
-  } else if (invited.error?.code === "email_exists") {
-    // generateLink returns the existing account without sending anything.
-    const existing = await admin.auth.admin.generateLink({ type: "magiclink", email });
-    if (existing.error || !existing.data.user) {
-      console.error("inviteTeammate lookup failed", { code: existing.error?.code });
-      return { status: "error", message: "We could not invite that person. Try again." };
-    }
-    invitedUserId = existing.data.user.id;
-    alreadyHadAccount = true;
-  } else {
-    console.error("inviteTeammate failed", {
-      status: invited.error?.status,
-      code: invited.error?.code,
-    });
-    const busy = invited.error?.status === 429;
-    return {
-      status: "error",
-      message: busy
-        ? "Too many emails were sent just now. Wait a minute and try again."
-        : "We could not send the invitation. Try again.",
-    };
-  }
+  const failed: FormState = {
+    status: "error",
+    message: "We could not send the invitation. Try again.",
+  };
+  const busy: FormState = {
+    status: "error",
+    message: "Too many emails were sent just now. Wait a minute and try again.",
+  };
+  const redirectTo = `${await getRequestOrigin()}/auth/callback?next=${encodeURIComponent(APP_HOME_PATH)}`;
 
   try {
-    const result = await addMember(admin, organization.id, invitedUserId, "editor");
-    if (result === "exists") {
-      return {
-        status: "success",
-        message: `${email} is already a member of ${organization.name}.`,
-      };
+    let invitedUserId = await findUserIdByEmail(admin, email);
+    if (invitedUserId) {
+      if (await getRole(supabase, organization.id, invitedUserId)) {
+        return {
+          status: "success",
+          message: `${email} is already a member of ${organization.name}.`,
+        };
+      }
+      const { error } = await createEmailClient()!.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: false, emailRedirectTo: redirectTo },
+      });
+      if (error) {
+        console.error("inviteTeammate notice failed", { status: error.status, code: error.code });
+        return error.status === 429 ? busy : failed;
+      }
+    } else {
+      const invited = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
+      if (!invited.data.user) {
+        console.error("inviteTeammate failed", {
+          status: invited.error?.status,
+          code: invited.error?.code,
+        });
+        return invited.error?.status === 429 ? busy : failed;
+      }
+      invitedUserId = invited.data.user.id;
     }
+
+    await addPendingInvitation(admin, invitedUserId, {
+      organizationId: organization.id,
+      organizationName: organization.name,
+      role: "editor",
+      invitedBy: user.id,
+      invitedAt: new Date().toISOString(),
+    });
   } catch (error) {
-    console.error("inviteTeammate membership failed", error);
-    return { status: "error", message: "We could not add that person. Try again." };
+    console.error("inviteTeammate failed", error);
+    return failed;
   }
   return {
     status: "success",
-    message: alreadyHadAccount
-      ? `${email} already has an account. They now see ${organization.name} when they sign in.`
-      : `Invitation sent to ${email}. They join ${organization.name} when they open the email.`,
+    message: `Invitation sent to ${email}. They join ${organization.name} when they accept it.`,
   };
+}
+
+/**
+ * Accept an invitation waiting on the signed-in person's account. The invitation is read from the
+ * account on the server (never from the form), and the inviter must still be an owner or admin.
+ */
+export async function acceptInvitation(organizationId: string): Promise<void> {
+  const user = await requireUser();
+  const admin = createAdminClient();
+  if (!admin) return;
+
+  const invitation = await findPendingInvitation(admin, user.id, organizationId);
+  if (!invitation) return;
+  const inviterRole = await getRole(admin, invitation.organizationId, invitation.invitedBy);
+  if (inviterRole && INVITER_ROLES.includes(inviterRole)) {
+    await addMember(admin, invitation.organizationId, user.id, invitation.role);
+    await setActiveOrganization(invitation.organizationId);
+  }
+  // Accepted, or the inviter can no longer invite: either way the invitation is used up.
+  await removePendingInvitation(admin, user.id, invitation.organizationId);
+  revalidatePath("/", "layout");
+}
+
+export async function declineInvitation(organizationId: string): Promise<void> {
+  const user = await requireUser();
+  const admin = createAdminClient();
+  if (!admin) return;
+  await removePendingInvitation(admin, user.id, organizationId);
+  revalidatePath("/", "layout");
 }
 
 /** Switch the organization the person is working in. Only organizations they belong to are accepted. */
@@ -202,12 +246,12 @@ export async function switchOrganization(organizationId: string): Promise<void> 
 
 export async function updateProfile(_prev: FormState, formData: FormData): Promise<FormState> {
   const user = await requireUser();
-  const fullName = readName(formData, "fullName");
-  if (fullName.length > 120) return { status: "error", message: "Use at most 120 characters." };
+  const displayName = readName(formData, "displayName");
+  if (displayName.length > 120) return { status: "error", message: "Use at most 120 characters." };
   const supabase = await createClient();
   if (!supabase) return NOT_CONFIGURED;
   try {
-    await updateProfileName(supabase, user.id, fullName || null);
+    await updateDisplayName(supabase, user.id, displayName || null);
   } catch (error) {
     console.error("updateProfile failed", error);
     return { status: "error", message: "We could not save your profile. Try again." };

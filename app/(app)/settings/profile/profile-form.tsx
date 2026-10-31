@@ -7,18 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile, type FormState } from "@/lib/auth/actions";
 
-export function ProfileForm({ fullName }: { fullName: string }) {
+export function ProfileForm({ displayName }: { displayName: string }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(updateProfile, {
     status: "idle",
   });
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="fullName">Your name</Label>
+        <Label htmlFor="displayName">Your name</Label>
         <Input
-          id="fullName"
-          name="fullName"
-          defaultValue={fullName}
+          id="displayName"
+          name="displayName"
+          defaultValue={displayName}
           maxLength={120}
           autoComplete="name"
         />

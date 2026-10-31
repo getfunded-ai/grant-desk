@@ -4,8 +4,9 @@ import { CreateOrganizationForm } from "./create-organization-form";
 export const metadata = { title: "New organization · Grant Desk" };
 
 export default async function OnboardingPage() {
-  const { organizations } = await getOrganizationContext();
+  const { user, organizations } = await getOrganizationContext();
   const first = organizations.length === 0;
+  const invited = user.pendingInvitations.length > 0;
   return (
     <div className="max-w-md space-y-6">
       <div className="space-y-2">
@@ -17,6 +18,11 @@ export default async function OnboardingPage() {
           and switch between them at the top of the page.
         </p>
       </div>
+      {invited ? (
+        <p className="text-sm">
+          Joining a team instead? Accept the invitation at the top of the page.
+        </p>
+      ) : null}
       <CreateOrganizationForm />
     </div>
   );
