@@ -11,7 +11,7 @@ Dates assume two to four sessions at once and answers from Zach within a day.
 | Phase | Name                          | Tier | Runs with | Status      |
 | ----- | ----------------------------- | ---- | --------- | ----------- |
 | A     | Repo and guardrails           | high | —         | in progress |
-| B     | Data model and security       | high | C         | not started |
+| B     | Data model and security       | high | C         | in review   |
 | C     | Login, shell, deploy          | high | B         | not started |
 | D     | Grants.gov sync and browse    | high | E         | not started |
 | E     | Pipeline, calendar, reminders | high | D         | not started |
