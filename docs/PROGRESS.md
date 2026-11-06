@@ -9,7 +9,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds |
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
-| G     | Post-award, compliance  | in review   | see session log                    | PGlite migration and RLS tests (432), typecheck, lint, build      |
+| G     | Post-award, compliance  | in review   | #32                                | PGlite migration and RLS tests (432), typecheck, lint, build      |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
 
 ## Decisions
@@ -41,4 +41,5 @@ Living status. Every agent updates its own phase row and its own session-log lin
   reset, and there is no preview deploy for this branch yet. Tests: only the migration and RLS tests the
   policy allows were written and run. One fresh-context review round: one Important finding (the
   single-audit card showed an unknown total as US$0) and three nits, all fixed; one pre-existing gap
-  (deadlines have no done state) filed as its own issue.
+  (deadlines have no done state) filed as issue #30. Two more rounds on the fix commits found nothing
+  Important. Pull request #32 is open against `main`, ready for review; Zach merges it (high tier).
