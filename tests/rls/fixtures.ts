@@ -25,8 +25,24 @@ export const TENANT_TABLES = [
 
 export type TenantTable = (typeof TENANT_TABLES)[number];
 
-/** Every table in public: the tenant tables plus the two that are scoped differently. */
-export const ALL_PUBLIC_TABLES = [...TENANT_TABLES, "organizations", "profiles"] as const;
+/**
+ * Catalog tables (Phase D): public federal reference data and the sync-run log. No organization_id;
+ * every signed-in person reads them and only server code writes them.
+ */
+export const CATALOG_TABLES = [
+  "grants_gov_agencies",
+  "assistance_listings",
+  "opportunity_details",
+  "opportunity_sync_runs",
+] as const;
+
+/** Every table in public: the tenant tables, the catalog tables, and the two scoped differently. */
+export const ALL_PUBLIC_TABLES = [
+  ...TENANT_TABLES,
+  ...CATALOG_TABLES,
+  "organizations",
+  "profiles",
+] as const;
 
 export interface Org {
   id: string;
