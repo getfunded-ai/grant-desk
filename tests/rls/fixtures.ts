@@ -36,6 +36,14 @@ export const CATALOG_TABLES = [
   "opportunity_sync_runs",
 ] as const;
 
+/** The key column of each catalog table (not every table has an `id`). */
+export const CATALOG_KEY_COLUMN: Record<(typeof CATALOG_TABLES)[number], string> = {
+  grants_gov_agencies: "code",
+  assistance_listings: "number",
+  opportunity_details: "opportunity_id",
+  opportunity_sync_runs: "id",
+};
+
 /** Every table in public: the tenant tables, the catalog tables, and the two scoped differently. */
 export const ALL_PUBLIC_TABLES = [
   ...TENANT_TABLES,
