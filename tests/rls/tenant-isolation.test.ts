@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Db, type Row, as, attempt, insertSql, openDb } from "../db/harness";
 import {
   ALL_PUBLIC_TABLES,
+  CATALOG_KEY_COLUMN,
   type Org,
   TENANT_TABLES,
   type TenantTable,
@@ -283,8 +284,9 @@ describe("anonymous callers", () => {
   });
 
   it.each(ALL_PUBLIC_TABLES)("cannot update or delete %s", async (table) => {
+    const key = (CATALOG_KEY_COLUMN as Record<string, string>)[table] ?? "id";
     const update = await as(db, { role: "anon" }, () =>
-      attempt(db, `update public.${table} set id = id`),
+      attempt(db, `update public.${table} set ${key} = ${key}`),
     );
     expect(update.error?.message).toMatch(/permission denied/);
     const del = await as(db, { role: "anon" }, () => attempt(db, `delete from public.${table}`));
