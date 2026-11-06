@@ -152,12 +152,15 @@ export async function runNightlyExtract(options: NightlyOptions): Promise<Nightl
   };
 
   let runId: string | null = null;
-  let sourceUrl = options.date ? extractUrlFor(options.date) : null;
+  let sourceUrl = extractUrlFor(options.date ?? today);
   try {
+    // Record the run before the download, so a missing or refused extract still leaves a failed
+    // run on the browse page instead of "not loaded yet". The URL is the one tried first; the
+    // result below carries the one that was actually used.
+    runId = await writer.startRun("nightly", sourceUrl);
     const known = await writer.listKnownExternalIds();
     const extract = await openExtract(options);
     sourceUrl = extract.url;
-    runId = await writer.startRun("nightly", sourceUrl);
 
     const agencies = new Map<string, Agency>();
     const listings = new Set<string>();

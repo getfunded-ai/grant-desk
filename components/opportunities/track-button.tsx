@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { FormState } from "@/lib/auth/actions";
 import { trackOpportunity } from "@/lib/grants-gov/actions";
 
-/** "Track this": one click creates a grant in stage prospect and opens it. */
+/** "Track this": one click creates a grant in stage prospect; the page then shows it as tracked. */
 export function TrackButton({
   opportunityId,
   size = "default",
