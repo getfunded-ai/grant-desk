@@ -24,7 +24,7 @@ subscribes to an agency's iCal feed, and sees the deadline on their own calendar
 | Phase | Name                        | Tier   | Runs with | Status      |
 | ----- | --------------------------- | ------ | --------- | ----------- |
 | F     | Documents and boilerplate   | medium | G, H      | not started |
-| G     | Post-award and compliance   | high   | F, H      | not started |
+| G     | Post-award and compliance   | high   | F, H      | in review   |
 | H     | Funder profiles             | medium | F, G      | not started |
 | I     | The US$1 tier               | high   | J         | not started |
 | J     | Public site, SEO, analytics | high   | I         | not started |
