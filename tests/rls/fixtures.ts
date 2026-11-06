@@ -20,8 +20,18 @@ export const TENANT_TABLES = [
   "documents",
   "notes",
   "boilerplate",
-  // Phase AA
+  "awards",
+  "award_reports",
+  "budget_lines",
+  "budget_actuals",
+  "reimbursements",
+  "compliance_items",
+  "feed_items",
+  "calendar_tokens",
+  "reminder_preferences",
+  "reminder_log",
   "contacts",
+  // Phase AA
   "knowledge_facts",
   "learning_sessions",
   "touches",
@@ -43,6 +53,10 @@ export interface Org {
   grantId: string;
   opportunityId: string;
   feedId: string;
+  awardId: string;
+  budgetLineId: string;
+  /** A second grant with no award yet, so an award row can be inserted in the tests. */
+  spareGrantId: string;
   contactId: string;
   sessionId: string;
   proposalId: string;
@@ -58,6 +72,10 @@ export interface World {
   A: Org;
   B: Org;
   catalogOpportunityId: string;
+}
+
+function randomHex64(): string {
+  return (randomUUID() + randomUUID()).replace(/-/g, "");
 }
 
 export async function createUser(db: Db, email: string): Promise<string> {
@@ -81,6 +99,9 @@ export type OrgRef = {
   funderId: string;
   grantId: string;
   feedId: string;
+  awardId: string;
+  budgetLineId: string;
+  spareGrantId: string;
   contactId: string;
   sessionId: string;
   /** A proposal no session link points at yet, so a link to it can be inserted. */
@@ -146,8 +167,49 @@ export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
       return { ...base, grant_id: org.grantId, body: `Note ${tag}`, created_by: person };
     case "boilerplate":
       return { ...base, title: `Answer ${tag}`, body: "Our mission.", created_by: person };
+    case "awards":
+      // One award per grant: the fixture grant already has one, so this uses the spare grant.
+      return { ...base, grant_id: org.spareGrantId, is_federal: true, created_by: person };
+    case "award_reports":
+      return {
+        ...base,
+        award_id: org.awardId,
+        kind: "financial",
+        title: `Report ${tag}`,
+        due_date: "2027-04-30",
+        created_by: person,
+      };
+    case "budget_lines":
+      return { ...base, award_id: org.awardId, category: `Line ${tag}`, created_by: person };
+    case "budget_actuals":
+      return {
+        ...base,
+        award_id: org.awardId,
+        budget_line_id: org.budgetLineId,
+        spent_on: "2027-01-15",
+        amount: "125.50",
+        created_by: person,
+      };
+    case "reimbursements":
+      return { ...base, award_id: org.awardId, invoice_number: `INV-${tag}`, created_by: person };
+    case "compliance_items":
+      return { ...base, award_id: org.awardId, title: `Item ${tag}`, created_by: person };
+    case "feed_items":
+      return {
+        ...base,
+        external_feed_id: org.feedId,
+        external_uid: `item-${tag}`,
+        title: `News ${tag}`,
+        created_by: person,
+      };
+    case "calendar_tokens":
+      return { ...base, token_hash: randomHex64(), label: `Token ${tag}`, created_by: person };
+    case "reminder_preferences":
+      return { ...base, user_id: person, mode: "digest" };
+    case "reminder_log":
+      return { ...base, user_id: person, item_key: `deadline:${tag}`, days_before: 7 };
     case "contacts":
-      return { ...base, funder_id: org.funderId, name: `Contact ${tag}`, created_by: person };
+      return { ...base, grant_id: org.grantId, name: `Contact ${tag}`, created_by: person };
     case "knowledge_facts":
       return {
         ...base,
@@ -203,6 +265,9 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     funderId: "",
     grantId: "",
     feedId: "",
+    awardId: "",
+    budgetLineId: "",
+    spareGrantId: "",
     contactId: "",
     sessionId: "",
     proposalId: "",
@@ -217,6 +282,15 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
   ref.grantId = grant.id as string;
   const feed = await insertRow(db, "external_feeds", rowFor("external_feeds", ref, owner));
   ref.feedId = feed.id as string;
+  const award = await insertRow(db, "awards", {
+    ...rowFor("awards", ref, owner),
+    grant_id: ref.grantId,
+  });
+  ref.awardId = award.id as string;
+  const spare = await insertRow(db, "grants", rowFor("grants", ref, owner));
+  ref.spareGrantId = spare.id as string;
+  const line = await insertRow(db, "budget_lines", rowFor("budget_lines", ref, owner));
+  ref.budgetLineId = line.id as string;
   const contact = await insertRow(db, "contacts", rowFor("contacts", ref, owner));
   ref.contactId = contact.id as string;
   const session = await insertRow(db, "learning_sessions", rowFor("learning_sessions", ref, owner));
@@ -227,6 +301,8 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     opportunities: opportunity.id as string,
     grants: ref.grantId,
     external_feeds: ref.feedId,
+    awards: ref.awardId,
+    budget_lines: ref.budgetLineId,
     contacts: ref.contactId,
     learning_sessions: ref.sessionId,
   };
@@ -238,6 +314,14 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     "documents",
     "notes",
     "boilerplate",
+    "award_reports",
+    "budget_actuals",
+    "reimbursements",
+    "compliance_items",
+    "feed_items",
+    "calendar_tokens",
+    "reminder_preferences",
+    "reminder_log",
     "knowledge_facts",
     "touches",
     "session_lessons",
@@ -273,6 +357,9 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     grantId: ref.grantId,
     opportunityId: opportunity.id as string,
     feedId: ref.feedId,
+    awardId: ref.awardId,
+    budgetLineId: ref.budgetLineId,
+    spareGrantId: ref.spareGrantId,
     contactId: ref.contactId,
     sessionId: ref.sessionId,
     proposalId: ref.proposalId,

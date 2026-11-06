@@ -42,7 +42,7 @@ assistant writes a results file, the app turns every item into a proposal a pers
    - `session_lessons`: session, lesson, evidence, applies to (`prospecting`, `outreach`, `application`,
      `post_award`, `general`).
    - `session_proposals`: session to `proposals` link.
-   Column grants follow Phase B: callers never choose `id` or `created_at` on append-only tables.
+     Column grants follow Phase B: callers never choose `id` or `created_at` on append-only tables.
 2. Playbooks in `content/playbooks/<key>.md` with front matter (`key`, `title`, `for`, `steps`): the six keys
    in the format document. Each says what to read, what to produce, and what counts as a lesson. Generic
    text only. No real organization, client or customer names.

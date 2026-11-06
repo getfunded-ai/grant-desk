@@ -166,26 +166,15 @@ $$;
 
 -- Contacts ----------------------------------------------------------------------------------------
 
-create table public.contacts (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references public.organizations (id) on delete cascade,
-  funder_id uuid,
-  name text not null check (length(btrim(name)) between 1 and 300),
-  role text check (role is null or length(role) <= 300),
-  -- Private details. Never exported in a packet.
-  email text check (email is null or length(email) <= 320),
-  phone text check (phone is null or length(phone) <= 50),
-  publishability public.contact_publishability not null default 'private',
-  notes text,
-  created_by uuid default auth.uid() references auth.users (id) on delete set null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (organization_id, id),
-  foreign key (organization_id, funder_id) references public.funders (organization_id, id) on delete set null (funder_id)
-);
+-- Contacts: Phase E created public.contacts (people on a grant or at a funder). Phase AA shares it:
+-- a contact may now exist on its own (no grant, no funder), carries a publishability flag so private
+-- details never leave the organization, and gets the (organization_id, id) key that touches reference.
+alter table public.contacts
+  drop constraint contacts_target,
+  add column publishability public.contact_publishability not null default 'private',
+  add unique (organization_id, id);
 
 create index contacts_organization on public.contacts (organization_id, name);
-create index contacts_funder on public.contacts (funder_id);
 
 -- Learning sessions ---------------------------------------------------------------------------------
 
@@ -593,10 +582,6 @@ create trigger knowledge_facts_guard before insert or update on public.knowledge
 create trigger knowledge_facts_keep_owner_columns before update on public.knowledge_facts
   for each row execute function private.keep_owner_columns();
 
-create trigger contacts_updated_at before update on public.contacts
-  for each row execute function private.set_updated_at();
-create trigger contacts_keep_owner_columns before update on public.contacts
-  for each row execute function private.keep_owner_columns();
 
 create trigger learning_sessions_number before insert on public.learning_sessions
   for each row execute function private.number_learning_session();
@@ -619,7 +604,6 @@ from public, anon, authenticated;
 -- Row-level security ------------------------------------------------------------------------------
 
 alter table public.knowledge_facts enable row level security;
-alter table public.contacts enable row level security;
 alter table public.learning_sessions enable row level security;
 alter table public.touches enable row level security;
 alter table public.session_lessons enable row level security;
@@ -635,17 +619,7 @@ create policy knowledge_facts_update on public.knowledge_facts
   for update to authenticated
   using (private.can_edit(organization_id)) with check (private.can_edit(organization_id));
 
--- Contacts: members read; editors write and remove.
-create policy contacts_select on public.contacts
-  for select to authenticated using (private.is_member(organization_id));
-create policy contacts_insert on public.contacts
-  for insert to authenticated
-  with check (private.can_edit(organization_id) and created_by = (select auth.uid()));
-create policy contacts_update on public.contacts
-  for update to authenticated
-  using (private.can_edit(organization_id)) with check (private.can_edit(organization_id));
-create policy contacts_delete on public.contacts
-  for delete to authenticated using (private.can_edit(organization_id));
+-- Contacts: Phase E's policies apply (members read; editors create, update and delete).
 
 -- Sessions: members read; editors open and close; nobody deletes.
 create policy learning_sessions_select on public.learning_sessions

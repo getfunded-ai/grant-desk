@@ -44,6 +44,16 @@ const TOUCH: Record<TenantTable, [string, unknown]> = {
   documents: ["name", "changed"],
   notes: ["body", "changed"],
   boilerplate: ["title", "changed"],
+  awards: ["award_number", "changed"],
+  award_reports: ["title", "changed"],
+  budget_lines: ["category", "changed"],
+  budget_actuals: ["description", "changed"],
+  reimbursements: ["invoice_number", "changed"],
+  compliance_items: ["title", "changed"],
+  feed_items: ["title", "changed"],
+  calendar_tokens: ["label", "changed"],
+  reminder_preferences: ["mode", "off"],
+  reminder_log: ["days_before", 99],
   contacts: ["name", "changed"],
   knowledge_facts: ["status", "superseded"],
   learning_sessions: ["lessons_summary", "changed"],
@@ -206,8 +216,11 @@ describe("a signed-in person with no organization", () => {
 });
 
 describe("a viewer", () => {
-  // Rows the authenticated role can never insert, whoever asks, are covered by the next block.
-  const WRITABLE = TENANT_TABLES.filter((t) => t !== "grant_stage_history");
+  // Rows the authenticated role can never insert, whoever asks, are covered by the next block. A
+  // viewer may set their own reminder preference (and only their own: feeds.test.ts).
+  const WRITABLE = TENANT_TABLES.filter(
+    (t) => t !== "grant_stage_history" && t !== "reminder_log" && t !== "reminder_preferences",
+  );
 
   it.each(WRITABLE)("cannot insert into %s of their own organization", async (table) => {
     const values =
@@ -248,9 +261,14 @@ describe("a viewer", () => {
 
 describe("an owner in their own organization (the positive control)", () => {
   // Stage history is written only by its trigger; members are added only by create_organization or
-  // server code (see rules.test.ts).
+  // server code (see rules.test.ts); the reminder log only by server code after a real send, and a
+  // reminder preference is one row per person, which the fixtures already hold (feeds.test.ts).
   const INSERTABLE = TENANT_TABLES.filter(
-    (t) => t !== "grant_stage_history" && t !== "memberships",
+    (t) =>
+      t !== "grant_stage_history" &&
+      t !== "memberships" &&
+      t !== "reminder_log" &&
+      t !== "reminder_preferences",
   );
 
   it.each(INSERTABLE)("can insert into %s", async (table) => {

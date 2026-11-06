@@ -18,24 +18,67 @@ is what tools read.
 ```json
 {
   "schema_version": 1,
-  "session": { "id": "uuid", "number": 1, "playbook": "seeker-prospecting", "goal": "text", "opened_at": "2026-11-06T02:00:00Z" },
+  "session": {
+    "id": "uuid",
+    "number": 1,
+    "playbook": "seeker-prospecting",
+    "goal": "text",
+    "opened_at": "2026-11-06T02:00:00Z"
+  },
   "organization": {
-    "id": "uuid", "name": "text", "kind": "seeker | funder | company",
-    "ein": "text or null", "uei": "text or null", "mission": "text or null",
-    "budget_size": "text or null", "service_area": "text or null"
+    "id": "uuid",
+    "name": "text",
+    "kind": "seeker | funder | company",
+    "ein": "text or null",
+    "uei": "text or null",
+    "mission": "text or null",
+    "budget_size": "text or null",
+    "service_area": "text or null"
   },
   "knowledge": [
-    { "id": "uuid", "subject_kind": "organization | funder | opportunity | contact | grant", "subject_id": "uuid or null",
-      "fact": "text", "source_kind": "filing | website | document | person | ai", "source_ref": "URL, document id, or 'said by <role>'",
-      "confidence": "stated | likely | guess", "confirmed_at": "ISO date" }
+    {
+      "id": "uuid",
+      "subject_kind": "organization | funder | opportunity | contact | grant",
+      "subject_id": "uuid or null",
+      "fact": "text",
+      "source_kind": "filing | website | document | person | ai",
+      "source_ref": "URL, document id, or 'said by <role>'",
+      "confidence": "stated | likely | guess",
+      "confirmed_at": "ISO date"
+    }
   ],
   "grants": [
-    { "id": "uuid", "title": "text", "funder_name": "text or null", "stage": "prospect | qualifying | loi | application | submitted | awarded | declined | active | reporting | closed",
-      "amount_asked": "number or null", "amount_awarded": "number or null", "next_deadline": "ISO date or null" }
+    {
+      "id": "uuid",
+      "title": "text",
+      "funder_name": "text or null",
+      "stage": "prospect | qualifying | loi | application | submitted | awarded | declined | active | reporting | closed",
+      "amount_asked": "number or null",
+      "amount_awarded": "number or null",
+      "next_deadline": "ISO date or null"
+    }
   ],
-  "deadlines": [ { "grant_id": "uuid or null", "title": "text", "due_at": "ISO date", "kind": "text" } ],
-  "contacts": [ { "id": "uuid", "name": "text", "role": "text or null", "funder_id": "uuid or null", "last_touch_at": "ISO date or null", "last_touch_kind": "text or null" } ],
-  "lessons": [ { "session_number": 1, "applies_to": "prospecting | outreach | application | post_award | general", "lesson": "text", "evidence": "text" } ],
+  "deadlines": [
+    { "grant_id": "uuid or null", "title": "text", "due_at": "ISO date", "kind": "text" }
+  ],
+  "contacts": [
+    {
+      "id": "uuid",
+      "name": "text",
+      "role": "text or null",
+      "funder_id": "uuid or null",
+      "last_touch_at": "ISO date or null",
+      "last_touch_kind": "text or null"
+    }
+  ],
+  "lessons": [
+    {
+      "session_number": 1,
+      "applies_to": "prospecting | outreach | application | post_award | general",
+      "lesson": "text",
+      "evidence": "text"
+    }
+  ],
   "rules": [
     "Facts come only from the packet or from tools; cite each one.",
     "Unknown is not zero or closed: write 'Not available' or 'Not stated in filings'.",
@@ -60,33 +103,68 @@ Rules for the exporter:
 {
   "schema_version": 1,
   "session_id": "uuid",
-  "produced_by": { "tool": "claude-code nonprofit-grants/learning-session", "model": "claude-fable-5-1", "date": "2026-11-06" },
+  "produced_by": {
+    "tool": "claude-code nonprofit-grants/learning-session",
+    "model": "claude-fable-5-1",
+    "date": "2026-11-06"
+  },
   "summary": "Three to five plain sentences a person can read first.",
   "items": [
     {
       "kind": "knowledge_fact",
-      "payload": { "subject_kind": "funder", "subject_ref": { "ein": "text or null", "name": "text" }, "fact": "text", "source_kind": "filing", "source_ref": "URL or filing id", "confidence": "stated" },
-      "evidence": [ { "source_ref": "URL or filing id", "quote": "verbatim text, at most 300 characters" } ]
+      "payload": {
+        "subject_kind": "funder",
+        "subject_ref": { "ein": "text or null", "name": "text" },
+        "fact": "text",
+        "source_kind": "filing",
+        "source_ref": "URL or filing id",
+        "confidence": "stated"
+      },
+      "evidence": [
+        { "source_ref": "URL or filing id", "quote": "verbatim text, at most 300 characters" }
+      ]
     },
     {
       "kind": "contact",
-      "payload": { "name": "text", "role": "text or null", "funder_ref": { "ein": "text or null", "name": "text" }, "publishability": "public", "source_ref": "URL" },
-      "evidence": [ { "source_ref": "URL", "quote": "text" } ]
+      "payload": {
+        "name": "text",
+        "role": "text or null",
+        "funder_ref": { "ein": "text or null", "name": "text" },
+        "publishability": "public",
+        "source_ref": "URL"
+      },
+      "evidence": [{ "source_ref": "URL", "quote": "text" }]
     },
     {
       "kind": "outreach_draft",
-      "payload": { "to_contact_name": "text", "channel": "email | letter | call_script", "subject": "text or null", "body": "text", "uses_facts": ["knowledge fact ids or source refs"] },
-      "evidence": [ { "source_ref": "text", "quote": "text" } ]
+      "payload": {
+        "to_contact_name": "text",
+        "channel": "email | letter | call_script",
+        "subject": "text or null",
+        "body": "text",
+        "uses_facts": ["knowledge fact ids or source refs"]
+      },
+      "evidence": [{ "source_ref": "text", "quote": "text" }]
     },
     {
       "kind": "task",
-      "payload": { "title": "text", "grant_ref": { "id": "uuid or null", "title": "text or null" }, "due_at": "ISO date or null", "why": "text" },
+      "payload": {
+        "title": "text",
+        "grant_ref": { "id": "uuid or null", "title": "text or null" },
+        "due_at": "ISO date or null",
+        "why": "text"
+      },
       "evidence": []
     },
     {
       "kind": "stage_move",
-      "payload": { "grant_ref": { "id": "uuid", "title": "text" }, "from_stage": "prospect", "to_stage": "qualifying", "why": "text" },
-      "evidence": [ { "source_ref": "text", "quote": "text" } ]
+      "payload": {
+        "grant_ref": { "id": "uuid", "title": "text" },
+        "from_stage": "prospect",
+        "to_stage": "qualifying",
+        "why": "text"
+      },
+      "evidence": [{ "source_ref": "text", "quote": "text" }]
     },
     {
       "kind": "lesson",
@@ -120,14 +198,14 @@ Rules for the producer (the skill):
 
 ## 3. Playbook keys
 
-| Key | For | Produces |
-|---|---|---|
-| `seeker-prospecting` | seeker | funder facts, contacts, tasks, lessons |
-| `seeker-outreach` | seeker | outreach drafts, tasks, lessons |
-| `application-prep` | seeker, company | tasks, knowledge facts about the opportunity, lessons |
-| `post-award-reporting` | seeker, company | tasks for reports due, knowledge facts about award terms, lessons |
-| `funder-grantee-outreach` | funder | facts about candidate grantees, contacts, outreach drafts, lessons |
-| `company-nondilutive` | company | federal and state opportunity facts, tasks, lessons |
+| Key                       | For             | Produces                                                           |
+| ------------------------- | --------------- | ------------------------------------------------------------------ |
+| `seeker-prospecting`      | seeker          | funder facts, contacts, tasks, lessons                             |
+| `seeker-outreach`         | seeker          | outreach drafts, tasks, lessons                                    |
+| `application-prep`        | seeker, company | tasks, knowledge facts about the opportunity, lessons              |
+| `post-award-reporting`    | seeker, company | tasks for reports due, knowledge facts about award terms, lessons  |
+| `funder-grantee-outreach` | funder          | facts about candidate grantees, contacts, outreach drafts, lessons |
+| `company-nondilutive`     | company         | federal and state opportunity facts, tasks, lessons                |
 
 The playbook text lives in `content/playbooks/<key>.md` in Grant Desk and is copied into the packet's
 Markdown part so the producer does not need the repository.
