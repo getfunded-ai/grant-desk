@@ -10,7 +10,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
-| AA    | Learning loops          | in review   | (opened below)                     | PGlite tests (447), PostgREST check, typecheck, lint, build       |
+| AA    | Learning loops          | in review   | #33                               | PGlite tests (447), PostgREST check, typecheck, lint, build       |
 
 ## Decisions
 
@@ -44,3 +44,9 @@ Living status. Every agent updates its own phase row and its own session-log lin
   `components/shell/nav-items.ts` (its comment asks each phase to add its pages). `types/supabase.ts`
   was regenerated from a throwaway Postgres with all four migrations. `docs/learning-session-format.md`
   was not changed.
+- 2026-11-05: Phase AA pull request #33 opened ready for review on branch `phase/aa-learning-loops-2`
+  (the rebased history after Phases B and C merged; the first branch could not be force-pushed under
+  the repository rule and holds only the kickoff commit). Fresh-context review at `55f072f`: no
+  Important findings, three nits, two fixed in `ed59f02`, one answered in the pull request. Tier
+  high: Zach merges, then H-AA-1 applies the migration to the hosted project. Verified by: typecheck,
+  lint, build; 447 PGlite tests; PostgREST query check. Tests: run (migration and RLS exception).
