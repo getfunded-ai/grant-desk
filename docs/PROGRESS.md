@@ -9,7 +9,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds                   |
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests                               |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests                               |
-| D     | Grants.gov sync, browse | in review   | (link added when opened)           | PGlite migration and RLS tests; full extract loaded locally; typecheck, lint, build |
+| D     | Grants.gov sync, browse | in review   | #35                                | PGlite migration and RLS tests; full extract loaded locally; typecheck, lint, build |
 | E–Z   | see ROADMAP.md          | not started |                                    |                                                                                     |
 
 ## Decisions
@@ -45,3 +45,4 @@ Living status. Every agent updates its own phase row and its own session-log lin
   (high tier): `{ "path": "/api/cron/grants-gov/nightly", "schedule": "30 10 * * *" }` and
   `{ "path": "/api/cron/grants-gov/intraday", "schedule": "0 13,17,21 * * *" }`; after
   `supabase db push`, call the nightly route once by hand.
+- 2026-11-06: Phase D reviewed in a fresh context from the roadmap session after the Phase D session hit its usage limit. One Important fixed ("Track this" led to a page that only exists once Phase E merges; it now returns to the opportunity page), one Nit fixed (the nightly run is recorded before the download), two Nits answered in the pull request. Pull request #35 opened; high tier, Zach merges. Verified by: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`. Tests: not rerun (weekly review policy).
