@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/db/types";
+import { isEndOfDayUtc } from "@/lib/pipeline/format";
 import { STAGES_BEFORE_DECISION, stageLabel } from "@/lib/pipeline/stages";
 import { dateInZone } from "./tz";
 
@@ -114,7 +115,7 @@ export async function listCalendarItems(
           key: `grant_due:${g.id}`,
           title: `${g.title}: submission due`,
           at,
-          allDay: false,
+          allDay: isEndOfDayUtc(at),
           timeZone: null,
           kind: "grant",
           grantId: g.id,

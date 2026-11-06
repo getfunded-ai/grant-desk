@@ -1,4 +1,5 @@
 import "server-only";
+import { lookup } from "node:dns/promises";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Tables } from "@/lib/db/types";
 import { parseICalendar } from "./ical-parse";
@@ -15,6 +16,7 @@ export type Feed = Tables<"external_feeds">;
 
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_BYTES = 2_000_000;
+const MAX_REDIRECTS = 5;
 const USER_AGENT = "GrantDesk/0.1 (+https://getfunded.ai)";
 
 export type RefreshResult =
@@ -51,8 +53,22 @@ export function checkFeedUrl(
   return { ok: true, url: url.toString().slice(0, 2000) };
 }
 
-function isPrivateAddress(host: string): boolean {
-  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(host);
+export function isPrivateAddress(host: string): boolean {
+  const bare = host.replace(/^\[|\]$/g, "").toLowerCase();
+  // IPv4-mapped IPv6 (::ffff:10.0.0.1 or ::ffff:a00:1) is the IPv4 address it wraps.
+  const mapped = /^::ffff:(.+)$/.exec(bare);
+  if (mapped) {
+    const inner = mapped[1];
+    if (inner.includes(".")) return isPrivateAddress(inner);
+    const hex = /^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(inner);
+    if (hex) {
+      const hi = parseInt(hex[1], 16);
+      const lo = parseInt(hex[2], 16);
+      return isPrivateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+    }
+    return true;
+  }
+  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(bare);
   if (v4) {
     const [a, b] = [Number(v4[1]), Number(v4[2])];
     return (
@@ -62,30 +78,56 @@ function isPrivateAddress(host: string): boolean {
       (a === 169 && b === 254) ||
       (a === 172 && b >= 16 && b <= 31) ||
       (a === 192 && b === 168) ||
+      (a === 100 && b >= 64 && b <= 127) ||
       a >= 224
     );
   }
-  const bare = host.replace(/^\[|\]$/g, "");
-  return bare.includes(":") && (bare === "::1" || /^(fc|fd|fe80)/i.test(bare) || bare === "::");
+  if (bare.includes(":")) {
+    return bare === "::1" || bare === "::" || /^(fc|fd|fe[89ab])/i.test(bare);
+  }
+  return false;
+}
+
+/** The name must resolve to a public address too, so a public hostname cannot point inward. */
+async function assertResolvesPublic(hostname: string): Promise<void> {
+  const addresses = await lookup(hostname, { all: true, verbatim: true });
+  if (addresses.length === 0) throw new Error("The feed's address does not resolve");
+  for (const { address } of addresses) {
+    if (isPrivateAddress(address)) throw new Error("That address is not on the public internet");
+  }
 }
 
 export async function fetchFeedText(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: {
-      "user-agent": USER_AGENT,
-      accept:
-        "text/calendar, application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
-    },
-    redirect: "follow",
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`The feed answered ${response.status}`);
-  const length = Number(response.headers.get("content-length") ?? "0");
-  if (length > MAX_BYTES) throw new Error("The feed is larger than 2 MB");
-  const buffer = await response.arrayBuffer();
-  if (buffer.byteLength > MAX_BYTES) throw new Error("The feed is larger than 2 MB");
-  return new TextDecoder("utf-8").decode(buffer);
+  let current = url;
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+    const checked = checkFeedUrl(current);
+    if (!checked.ok) throw new Error(checked.message);
+    await assertResolvesPublic(new URL(checked.url).hostname);
+    // Redirects are followed by hand so every hop gets the same checks as the first address.
+    const response = await fetch(checked.url, {
+      headers: {
+        "user-agent": USER_AGENT,
+        accept:
+          "text/calendar, application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+      },
+      redirect: "manual",
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      cache: "no-store",
+    });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) throw new Error(`The feed answered ${response.status} without a location`);
+      current = new URL(location, checked.url).toString();
+      continue;
+    }
+    if (!response.ok) throw new Error(`The feed answered ${response.status}`);
+    const length = Number(response.headers.get("content-length") ?? "0");
+    if (length > MAX_BYTES) throw new Error("The feed is larger than 2 MB");
+    const buffer = await response.arrayBuffer();
+    if (buffer.byteLength > MAX_BYTES) throw new Error("The feed is larger than 2 MB");
+    return new TextDecoder("utf-8").decode(buffer);
+  }
+  throw new Error("The feed redirected too many times");
 }
 
 /** Fetch one feed and write its contents. Returns what happened; never throws. */

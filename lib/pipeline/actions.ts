@@ -85,8 +85,10 @@ function dateField(formData: FormData, field: string): string | null | "invalid"
 }
 
 /**
- * A deadline typed as a local date and time plus a zone, stored as the exact moment. Without a
- * time, the deadline is the end of that day in the zone (23:59), so it never shows a day early.
+ * A deadline typed as a local date, an optional time and a zone, stored as the exact moment.
+ * Without a time it is an all-day deadline: stored as the last second of that date in UTC and
+ * read back as a UTC calendar day everywhere (board, calendar, iCal feed, reminders), so it never
+ * shows a day early or late whatever zone the reader is in.
  */
 function dateTimeField(
   formData: FormData,
@@ -97,17 +99,18 @@ function dateTimeField(
   const date = dateField(formData, dateName);
   if (date === null || date === "invalid") return date;
   const time = text(formData, timeName, 5);
+  if (time === "") return { at: `${date}T23:59:59.000Z`, zone: null, allDay: true };
+  if (!/^\d{2}:\d{2}$/.test(time)) return "invalid";
   const zone = text(formData, zoneName, 100);
-  if (time !== "" && !/^\d{2}:\d{2}$/.test(time)) return "invalid";
-  const resolvedZone = zone !== "" && isValidTimeZone(zone) ? zone : zone === "" ? "UTC" : null;
-  if (!resolvedZone) return "invalid";
+  if (zone !== "" && !isValidTimeZone(zone)) return "invalid";
+  const resolvedZone = zone === "" ? "UTC" : zone;
   const [y, m, d] = date.split("-").map(Number);
-  const [h, mi] = (time || "23:59").split(":").map(Number);
+  const [h, mi] = time.split(":").map(Number);
   const at = zonedToUtc(
     { year: y, month: m, day: d, hour: h, minute: mi, second: 0 },
     resolvedZone,
   );
-  return { at: at.toISOString(), zone: zone === "" ? null : resolvedZone, allDay: time === "" };
+  return { at: at.toISOString(), zone: zone === "" ? null : resolvedZone, allDay: false };
 }
 
 function grantFields(formData: FormData): FormState | Record<string, unknown> {
@@ -452,7 +455,13 @@ export async function decideProposal(
           };
         }
         const moved = await moveGrantStage(grantId, payload.to_stage as GrantStage);
-        if (moved.status === "error") return moved;
+        if (moved.status === "error") {
+          return {
+            status: "error",
+            message:
+              "The decision was recorded, but the grant could not be moved. Move it with the stage menu.",
+          };
+        }
       }
     }
   } catch (error) {

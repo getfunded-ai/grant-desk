@@ -260,7 +260,8 @@ export default async function CalendarPage({
                 <ul className="mt-1 space-y-1 text-muted-foreground">
                   {sent.map((row) => (
                     <li key={row.id}>
-                      {formatDateTime(row.sent_at)}: {row.item_key} ({row.days_before} days before)
+                      {formatDateTime(row.sent_at)}: {describeItemKey(row.item_key)},{" "}
+                      {row.days_before === 1 ? "1 day" : `${row.days_before} days`} before
                     </li>
                   ))}
                 </ul>
@@ -271,4 +272,23 @@ export default async function CalendarPage({
       </div>
     </div>
   );
+}
+
+/** "deadline:<id>" → "a key date or feed event", and so on; the ids mean nothing to a person. */
+function describeItemKey(key: string): string {
+  const kind = key.split(":")[0];
+  switch (kind) {
+    case "deadline":
+      return "a key date or feed event";
+    case "task":
+      return "a task";
+    case "grant_due":
+      return "a submission deadline";
+    case "grant_decision_date":
+      return "an expected decision";
+    case "grant_award_end_date":
+      return "the end of an award period";
+    default:
+      return "a date";
+  }
 }

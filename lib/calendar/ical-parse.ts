@@ -113,7 +113,7 @@ export function unescapeText(value: string): string {
   return value
     .replace(/\\n/gi, "\n")
     .replace(/\\,/g, ",")
-    .replace(/\;/g, ";")
+    .replace(/\\;/g, ";")
     .replace(/\\\\/g, "\\")
     .trim();
 }

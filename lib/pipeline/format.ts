@@ -29,9 +29,16 @@ export function formatDate(date: string | null | undefined): string {
   }).format(new Date(Date.UTC(Number(y), Number(m) - 1, Number(d))));
 }
 
+/** An all-day moment is stored as the last second of its date in UTC (see lib/pipeline/actions.ts). */
+export function isEndOfDayUtc(value: string | Date): boolean {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return date.getUTCHours() === 23 && date.getUTCMinutes() === 59 && date.getUTCSeconds() === 59;
+}
+
 /**
  * A moment as "Dec 16, 2026, 2:00 PM EST". Shown in the zone it was stated in when known,
- * otherwise in UTC, and always with the zone name so nobody misreads a deadline.
+ * otherwise in UTC, and always with the zone name so nobody misreads a deadline. An all-day
+ * moment is a UTC calendar day and shows as a date only.
  */
 export function formatDateTime(
   value: string | Date | null | undefined,
@@ -41,10 +48,10 @@ export function formatDateTime(
   if (!value) return NOT_STATED;
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return NOT_STATED;
-  const zone = timeZone && isValidTimeZone(timeZone) ? timeZone : "UTC";
-  if (allDay) {
-    return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: zone }).format(date);
+  if (allDay || isEndOfDayUtc(date)) {
+    return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" }).format(date);
   }
+  const zone = timeZone && isValidTimeZone(timeZone) ? timeZone : "UTC";
   return (
     new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",

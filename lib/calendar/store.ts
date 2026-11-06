@@ -84,13 +84,22 @@ export async function setReminderMode(
   userId: string,
   mode: ReminderMode,
 ): Promise<void> {
-  const { error } = await db
+  // Not an upsert: people may update only the mode column, and PostgREST's upsert sets every
+  // column it was given. Update the row if there is one, otherwise insert it.
+  const updated = await db
     .from("reminder_preferences")
-    .upsert(
-      { organization_id: organizationId, user_id: userId, mode },
-      { onConflict: "organization_id,user_id" },
-    );
-  if (error) throw new Error(`Could not save the reminder setting: ${error.message}`);
+    .update({ mode })
+    .eq("organization_id", organizationId)
+    .eq("user_id", userId)
+    .select("id");
+  if (updated.error)
+    throw new Error(`Could not save the reminder setting: ${updated.error.message}`);
+  if (updated.data?.length) return;
+  const inserted = await db
+    .from("reminder_preferences")
+    .insert({ organization_id: organizationId, user_id: userId, mode });
+  if (inserted.error)
+    throw new Error(`Could not save the reminder setting: ${inserted.error.message}`);
 }
 
 export async function listRecentReminders(

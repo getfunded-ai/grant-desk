@@ -96,7 +96,8 @@ export function formatWhen(at: Date, timeZone: string | null, allDay: boolean): 
   const zone = timeZone ?? "UTC";
   try {
     if (allDay) {
-      return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: zone }).format(at);
+      // An all-day item is a UTC calendar day (lib/pipeline/actions.ts).
+      return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" }).format(at);
     }
     // dateStyle cannot be mixed with timeZoneName, so the parts are listed one by one.
     return new Intl.DateTimeFormat("en-US", {

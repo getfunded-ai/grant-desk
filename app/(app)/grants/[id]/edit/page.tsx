@@ -4,6 +4,7 @@ import { GrantForm } from "@/components/pipeline/grant-form";
 import { requireActiveOrganization } from "@/lib/auth/session";
 import { dateInZone } from "@/lib/calendar/tz";
 import { userDb } from "@/lib/pipeline/client";
+import { isEndOfDayUtc } from "@/lib/pipeline/format";
 import { canEdit } from "@/lib/pipeline/permissions";
 import { getGrant, listFunders } from "@/lib/pipeline/store";
 
@@ -22,8 +23,10 @@ export default async function EditGrantPage({ params }: { params: Promise<{ id: 
   if (!detail) notFound();
   const { grant } = detail;
 
-  // The stored moment is shown back as a date and time in UTC; a person can change the zone.
+  // A deadline with no time is stored as the last second of its date in UTC and comes back as the
+  // date alone; a timed one comes back as its UTC time, which a person can restate in any zone.
   const due = grant.submission_due_at ? new Date(grant.submission_due_at) : null;
+  const dueAllDay = due ? isEndOfDayUtc(due) : false;
   return (
     <div className="max-w-2xl space-y-6">
       <div className="space-y-2">
@@ -41,8 +44,8 @@ export default async function EditGrantPage({ params }: { params: Promise<{ id: 
           amountRequested: grant.amount_requested === null ? "" : String(grant.amount_requested),
           amountAwarded: grant.amount_awarded === null ? "" : String(grant.amount_awarded),
           dueDate: due ? dateInZone(due, "UTC") : "",
-          dueTime: due ? due.toISOString().slice(11, 16) : "",
-          dueZone: due ? "UTC" : "",
+          dueTime: due && !dueAllDay ? due.toISOString().slice(11, 16) : "",
+          dueZone: due && !dueAllDay ? "UTC" : "",
           decisionDate: grant.decision_date ?? "",
           awardStartDate: grant.award_start_date ?? "",
           awardEndDate: grant.award_end_date ?? "",
