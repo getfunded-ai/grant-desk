@@ -9,7 +9,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds |
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
-| E     | Pipeline and calendar   | in review   | opened 2026-11-05, link in log     | typecheck, lint, format, build; 346 tests; feed readers by hand   |
+| E     | Pipeline and calendar   | in review   | #31                                | typecheck, lint, format, build; 346 tests; feed readers by hand   |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
 
 ## Decisions
@@ -30,7 +30,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
   them, 262 migration and RLS tests (PGlite and the local Supabase stack), three review rounds. Nothing
   applied to the hosted database yet; that waits for the maintainer after merge.
 - 2026-11-05 (Phase E): Pipeline board, grant record, calendar, outside feeds, the organization's
-  own iCal address and reminder emails, on branch `phase/e-pipeline-calendar-reminders` (rebased onto
+  own iCal address and reminder emails, in pull request #31 on branch `phase/e-pipeline-calendar-reminders` (rebased onto
   `main` after Phases B and C merged). One migration, `20261105210000_feeds_calendar_reminders.sql`,
   with five tenant tables (`feed_items`, `calendar_tokens`, `reminder_preferences`, `reminder_log`,
   `contacts`), each with row-level security; `tests/rls/feeds.test.ts` plus the isolation matrix.
