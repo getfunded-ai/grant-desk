@@ -4,15 +4,16 @@ Living status. Every agent updates its own phase row and its own session-log lin
 
 ## Phases
 
-| Phase | Name                    | Status      | Pull request                       | Verified by                                                       |
-| ----- | ----------------------- | ----------- | ---------------------------------- | ----------------------------------------------------------------- |
-| A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds |
-| B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
-| C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
-| E     | Pipeline and calendar   | in review   | #31                                | typecheck, lint, format, build; 346 tests; feed readers by hand   |
-| G     | Post-award, compliance  | in review   | #32                                | PGlite migration and RLS tests (432), typecheck, lint, build      |
-| D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
-| AA    | Learning loops          | in review   | #33                                | PGlite tests (447), PostgREST check, typecheck, lint, build       |
+| Phase  | Name                    | Status      | Pull request                       | Verified by                                                                         |
+| ------ | ----------------------- | ----------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
+| A      | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds                   |
+| B      | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests                               |
+| C      | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests                               |
+| D      | Grants.gov sync, browse | in review   | #35                                | PGlite migration and RLS tests; full extract loaded locally; typecheck, lint, build |
+| E      | Pipeline and calendar   | in review   | #31                                | typecheck, lint, format, build; 346 tests; feed readers by hand                     |
+| G      | Post-award, compliance  | in review   | #32                                | PGlite migration and RLS tests (432), typecheck, lint, build                        |
+| F, H–Z | see ROADMAP.md          | not started |                                    |                                                                                     |
+| AA     | Learning loops          | in review   | #33                                | PGlite tests (447), PostgREST check, typecheck, lint, build                         |
 
 ## Decisions
 
@@ -98,3 +99,21 @@ Living status. Every agent updates its own phase row and its own session-log lin
   high: Zach merges, then H-AA-1 applies the migration to the hosted project. Verified by: typecheck,
   lint, build; 447 PGlite tests; PostgREST query check. Tests: run (migration and RLS exception).
 - 2026-11-06 (Phase AA): merged `main` after Phases E and G landed. Phase E had created `public.contacts` (people on a grant or at a funder) with the same migration version as Phase AA's file, so the Phase AA migration was renamed to `20261106090000_learning_loops.sql` and now shares Phase E's table instead of creating its own: it drops the rule that a contact needs a grant or a funder, adds `publishability` (default private), adds the `(organization_id, id)` key that touches reference, and keeps Phase E's policies and triggers. Phase E's test for the dropped rule now asserts the new one. Test fixtures, the isolation test and the nav items were hand-merged; `types/supabase.ts` regenerated from all six migrations. Verified by: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`; `vitest run tests/db tests/rls` (554 pass on the combined schema). The reconciliation lines were reviewed in a fresh context from the roadmap session (see the pull request).
+- 2026-11-05: Phase D built the Grants.gov catalog. One migration adds agencies, Assistance Listings,
+  opportunity details, a sync-run log, full-text search, a server-only batch upsert, and a trigger
+  that writes an activity_log line for every tracked grant when its opportunity's status or close
+  date changes. The nightly job streams the 320 MB daily extract without holding it in memory and
+  keeps about 2,200 of the 84,000 records (forecasts, open, closed within a year, plus anything
+  already tracked). The intraday job fetches new postings and every tracked opportunity's packages
+  and attachments. Browse page with filters, detail page, and "Track this" (creates a grant in stage
+  prospect). Verified by: PGlite migration and RLS tests (all green), the real 2026-11-05 extract
+  loaded into a throwaway Postgres through the real loader (83,671 scanned, 2,218 loaded, rerun
+  reported 2,218 unchanged), the intraday job run once against the live API, `pnpm typecheck`,
+  `pnpm lint`, `pnpm format:check`, `pnpm build`. Not loaded in a browser: no database has the
+  migration until it merges. Tests: only the migration/RLS exception tests were run (weekly review
+  policy). Maintainer steps: set `CRON_SECRET` in Vercel; add two cron lines to `vercel.json`
+  (high tier): `{ "path": "/api/cron/grants-gov/nightly", "schedule": "30 10 * * *" }` and
+  `{ "path": "/api/cron/grants-gov/intraday", "schedule": "0 13,17,21 * * *" }`; after
+  `supabase db push`, call the nightly route once by hand.
+- 2026-11-06: Phase D reviewed in a fresh context from the roadmap session after the Phase D session hit its usage limit. One Important fixed ("Track this" led to a page that only exists once Phase E merges; it now returns to the opportunity page), one Nit fixed (the nightly run is recorded before the download), two Nits answered in the pull request. Pull request #35 opened; high tier, Zach merges. Verified by: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`. Tests: not rerun (weekly review policy).
+- 2026-11-06 (Phase D): merged `main` after Phases E, G and AA landed. The migration was renamed to `20261106100000_opportunities_grants_gov.sql` because its version collided with Phase E's file. The roadmap, progress table and nav items were hand-merged; `types/supabase.ts` regenerated from all seven migrations. With Phase E in, "Track this" opens the grant record again. Verified by: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`; `vitest run tests/db tests/rls` (593 pass on the combined schema).

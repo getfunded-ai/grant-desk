@@ -55,6 +55,25 @@ export type Database = {
           },
         ];
       };
+      assistance_listings: {
+        Row: {
+          number: string;
+          title: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          number: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          number?: string;
+          title?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       award_reports: {
         Row: {
           award_id: string;
@@ -964,6 +983,28 @@ export type Database = {
           },
         ];
       };
+      grants_gov_agencies: {
+        Row: {
+          code: string;
+          name: string;
+          top_agency_code: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          code: string;
+          name: string;
+          top_agency_code: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          top_agency_code?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       knowledge_facts: {
         Row: {
           confidence: Database["public"]["Enums"]["knowledge_confidence"];
@@ -1204,6 +1245,7 @@ export type Database = {
           organization_id: string | null;
           other_dates: NonNullable<Json>;
           post_date: string | null;
+          search: unknown;
           source_system: string;
           source_url: string | null;
           status: Database["public"]["Enums"]["opportunity_status"];
@@ -1237,6 +1279,7 @@ export type Database = {
           organization_id?: string | null;
           other_dates?: NonNullable<Json>;
           post_date?: string | null;
+          search?: never;
           source_system?: string;
           source_url?: string | null;
           status: Database["public"]["Enums"]["opportunity_status"];
@@ -1269,6 +1312,7 @@ export type Database = {
           organization_id?: string | null;
           other_dates?: NonNullable<Json>;
           post_date?: string | null;
+          search?: never;
           source_system?: string;
           source_url?: string | null;
           status?: Database["public"]["Enums"]["opportunity_status"];
@@ -1287,6 +1331,85 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      opportunity_details: {
+        Row: {
+          assistance_listings: NonNullable<Json>;
+          attachments: NonNullable<Json>;
+          details: NonNullable<Json>;
+          fetched_at: string;
+          opportunity_id: string;
+          packages: NonNullable<Json>;
+          revision: number | null;
+          source_system: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          assistance_listings?: NonNullable<Json>;
+          attachments?: NonNullable<Json>;
+          details?: NonNullable<Json>;
+          fetched_at?: string;
+          opportunity_id: string;
+          packages?: NonNullable<Json>;
+          revision?: number | null;
+          source_system: string;
+        };
+        Update: {
+          assistance_listings?: NonNullable<Json>;
+          attachments?: NonNullable<Json>;
+          details?: NonNullable<Json>;
+          fetched_at?: string;
+          opportunity_id?: string;
+          packages?: NonNullable<Json>;
+          revision?: number | null;
+          source_system?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_details_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            isOneToOne: true;
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      opportunity_sync_runs: {
+        Row: {
+          counts: NonNullable<Json>;
+          error: string | null;
+          finished_at: string | null;
+          id: string;
+          job: string;
+          source_system: string;
+          source_url: string | null;
+          started_at: string;
+          status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          counts?: NonNullable<Json>;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          job: string;
+          source_system: string;
+          source_url?: string | null;
+          started_at?: string;
+          status?: string;
+        };
+        Update: {
+          counts?: NonNullable<Json>;
+          error?: string | null;
+          finished_at?: string | null;
+          id?: string;
+          job?: string;
+          source_system?: string;
+          source_url?: string | null;
+          started_at?: string;
+          status?: string;
+        };
+        Relationships: [];
       };
       organizations: {
         Row: {
@@ -1807,6 +1930,41 @@ export type Database = {
         Args: { p_items: Json; p_session_id: string };
         Returns: string[];
       };
+      search_opportunities: {
+        Args: {
+          p_agency?: string;
+          p_categories?: string[];
+          p_close_from?: string;
+          p_close_to?: string;
+          p_eligibilities?: string[];
+          p_keyword?: string;
+          p_limit?: number;
+          p_min_award_ceiling?: number;
+          p_offset?: number;
+          p_source_system?: string;
+          p_statuses?: Database["public"]["Enums"]["opportunity_status"][];
+        };
+        Returns: {
+          agency_code: string;
+          close_date: string;
+          eligible_applicants: string[];
+          external_id: string;
+          funder_name: string;
+          funding_categories: string[];
+          id: string;
+          max_award_amount: number;
+          min_award_amount: number;
+          opportunity_number: string;
+          post_date: string;
+          source_system: string;
+          source_url: string;
+          status: Database["public"]["Enums"]["opportunity_status"];
+          status_description: string;
+          title: string;
+          total_amount_available: number;
+          total_count: number;
+        }[];
+      };
       supersede_knowledge_fact: {
         Args: {
           p_confidence: Database["public"]["Enums"]["knowledge_confidence"];
@@ -1816,6 +1974,14 @@ export type Database = {
           p_source_ref: string;
         };
         Returns: string;
+      };
+      upsert_catalog_opportunities: {
+        Args: { p_rows: Json; p_source_system: string };
+        Returns: {
+          inserted: number;
+          unchanged: number;
+          updated: number;
+        }[];
       };
     };
     Enums: {

@@ -13,7 +13,7 @@ Dates assume two to four sessions at once and answers from Zach within a day.
 | A     | Repo and guardrails           | high | —         | in progress |
 | B     | Data model and security       | high | C         | in review   |
 | C     | Login, shell, deploy          | high | B         | done        |
-| D     | Grants.gov sync and browse    | high | E         | not started |
+| D     | Grants.gov sync and browse    | high | E         | in review   |
 | E     | Pipeline, calendar, reminders | high | D         | in review   |
 
 Gate: a maintainer signs in on the live site, creates an organization, adds a federal opportunity,
