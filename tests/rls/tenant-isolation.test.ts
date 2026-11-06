@@ -55,6 +55,11 @@ const TOUCH: Record<TenantTable, [string, unknown]> = {
   reminder_preferences: ["mode", "off"],
   reminder_log: ["days_before", 99],
   contacts: ["name", "changed"],
+  knowledge_facts: ["status", "superseded"],
+  learning_sessions: ["lessons_summary", "changed"],
+  touches: ["summary", "changed"],
+  session_lessons: ["lesson", "changed"],
+  session_proposals: ["created_at", "2020-01-01T00:00:00Z"],
   memberships: ["role", "viewer"],
 };
 

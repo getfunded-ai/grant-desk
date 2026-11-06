@@ -12,6 +12,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | E     | Pipeline and calendar   | in review   | #31                                | typecheck, lint, format, build; 346 tests; feed readers by hand   |
 | G     | Post-award, compliance  | in review   | #32                                | PGlite migration and RLS tests (432), typecheck, lint, build      |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
+| AA    | Learning loops          | in review   | #33                                | PGlite tests (447), PostgREST check, typecheck, lint, build       |
 
 ## Decisions
 
@@ -75,3 +76,25 @@ Living status. Every agent updates its own phase row and its own session-log lin
     `/settings`: the first push changed `APP_HOME_PATH` to `/grants`, which broke a Phase C sign-in
     test, so E-09 reverted it; the board is one click away in the header. `types/supabase.ts`
     regenerated from a scratch database (additive only).
+- 2026-11-05: Phase AA (learning loops) built in one session alongside D, E and G. One migration
+  (`organizations.kind`, `knowledge_facts`, `contacts`, `touches`, `learning_sessions`,
+  `session_lessons`, `session_proposals`, three database functions), six generic playbooks, the
+  packet builder and results validator, and the `/learning`, `/knowledge` and `/contacts` pages.
+  The "Done when" walk-through ran as a PGlite test against the real migration (session 1 → packet →
+  three hand-written items → accept two, reject one → close with a lesson → session 2 holds the
+  lesson), and the query module ran end to end against a throwaway PostgREST as a signed-in editor.
+  Not loaded in a browser: the shared local Supabase stack belongs to the other sessions tonight and
+  was not touched, so the pages were verified by `pnpm build` only. Three files outside the brief's
+  folders, each needed by Phase B's own test design or the shell: `tests/rls/fixtures.ts` and
+  `tests/rls/tenant-isolation.test.ts` (the migration test requires every new table to be listed
+  there, which puts the six tables under the cross-organization write tests), and
+  `components/shell/nav-items.ts` (its comment asks each phase to add its pages). `types/supabase.ts`
+  was regenerated from a throwaway Postgres with all four migrations. `docs/learning-session-format.md`
+  was not changed.
+- 2026-11-05: Phase AA pull request #33 opened ready for review on branch `phase/aa-learning-loops-2`
+  (the rebased history after Phases B and C merged; the first branch could not be force-pushed under
+  the repository rule and holds only the kickoff commit). Fresh-context review at `55f072f`: no
+  Important findings, three nits, two fixed in `ed59f02`, one answered in the pull request. Tier
+  high: Zach merges, then H-AA-1 applies the migration to the hosted project. Verified by: typecheck,
+  lint, build; 447 PGlite tests; PostgREST query check. Tests: run (migration and RLS exception).
+- 2026-11-06 (Phase AA): merged `main` after Phases E and G landed. Phase E had created `public.contacts` (people on a grant or at a funder) with the same migration version as Phase AA's file, so the Phase AA migration was renamed to `20261106090000_learning_loops.sql` and now shares Phase E's table instead of creating its own: it drops the rule that a contact needs a grant or a funder, adds `publishability` (default private), adds the `(organization_id, id)` key that touches reference, and keeps Phase E's policies and triggers. Phase E's test for the dropped rule now asserts the new one. Test fixtures, the isolation test and the nav items were hand-merged; `types/supabase.ts` regenerated from all six migrations. Verified by: `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm build`; `vitest run tests/db tests/rls` (554 pass on the combined schema). The reconciliation lines were reviewed in a fresh context from the roadmap session (see the pull request).

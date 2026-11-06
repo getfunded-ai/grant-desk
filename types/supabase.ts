@@ -488,6 +488,7 @@ export type Database = {
           notes: string | null;
           organization_id: string;
           phone: string | null;
+          publishability: Database["public"]["Enums"]["contact_publishability"];
           role: string | null;
           updated_at: string;
         };
@@ -503,6 +504,7 @@ export type Database = {
           notes?: string | null;
           organization_id: string;
           phone?: string | null;
+          publishability?: Database["public"]["Enums"]["contact_publishability"];
           role?: string | null;
           updated_at?: string;
         };
@@ -517,6 +519,7 @@ export type Database = {
           notes?: string | null;
           organization_id?: string;
           phone?: string | null;
+          publishability?: Database["public"]["Enums"]["contact_publishability"];
           role?: string | null;
           updated_at?: string;
         };
@@ -961,6 +964,130 @@ export type Database = {
           },
         ];
       };
+      knowledge_facts: {
+        Row: {
+          confidence: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          fact: string;
+          id: string;
+          organization_id: string;
+          source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref: string;
+          status: Database["public"]["Enums"]["knowledge_status"];
+          subject_id: string | null;
+          subject_kind: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          confidence?: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          fact: string;
+          id?: string;
+          organization_id: string;
+          source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref: string;
+          status?: Database["public"]["Enums"]["knowledge_status"];
+          subject_id?: string | null;
+          subject_kind: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by?: string | null;
+        };
+        Update: {
+          confidence?: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          fact?: string;
+          id?: string;
+          organization_id?: string;
+          source_kind?: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref?: string;
+          status?: Database["public"]["Enums"]["knowledge_status"];
+          subject_id?: string | null;
+          subject_kind?: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_facts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "knowledge_facts_organization_id_superseded_by_fkey";
+            columns: ["organization_id", "superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "knowledge_facts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      learning_sessions: {
+        Row: {
+          closed_at: string | null;
+          created_at: string;
+          goal: string;
+          id: string;
+          lessons_summary: string | null;
+          number: number;
+          opened_at: string;
+          opened_by: string | null;
+          organization_id: string;
+          packet: NonNullable<Json>;
+          playbook_key: Database["public"]["Enums"]["playbook_key"];
+          status: Database["public"]["Enums"]["learning_session_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          closed_at?: string | null;
+          created_at?: string;
+          goal: string;
+          id?: string;
+          lessons_summary?: string | null;
+          number: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          organization_id: string;
+          packet: NonNullable<Json>;
+          playbook_key: Database["public"]["Enums"]["playbook_key"];
+          status?: Database["public"]["Enums"]["learning_session_status"];
+          updated_at?: string;
+        };
+        Update: {
+          closed_at?: string | null;
+          created_at?: string;
+          goal?: string;
+          id?: string;
+          lessons_summary?: string | null;
+          number?: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          organization_id?: string;
+          packet?: NonNullable<Json>;
+          playbook_key?: Database["public"]["Enums"]["playbook_key"];
+          status?: Database["public"]["Enums"]["learning_session_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "learning_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       memberships: {
         Row: {
           created_at: string;
@@ -1167,6 +1294,7 @@ export type Database = {
           created_by: string | null;
           ein: string | null;
           id: string;
+          kind: Database["public"]["Enums"]["organization_kind"];
           mission: string | null;
           name: string;
           uei: string | null;
@@ -1179,6 +1307,7 @@ export type Database = {
           created_by?: string | null;
           ein?: string | null;
           id?: string;
+          kind?: Database["public"]["Enums"]["organization_kind"];
           mission?: string | null;
           name: string;
           uei?: string | null;
@@ -1190,6 +1319,7 @@ export type Database = {
           created_by?: string | null;
           ein?: string | null;
           id?: string;
+          kind?: Database["public"]["Enums"]["organization_kind"];
           mission?: string | null;
           name?: string;
           uei?: string | null;
@@ -1427,6 +1557,102 @@ export type Database = {
           },
         ];
       };
+      session_lessons: {
+        Row: {
+          applies_to: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at: string;
+          created_by: string | null;
+          evidence: string | null;
+          id: string;
+          lesson: string;
+          organization_id: string;
+          session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applies_to?: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at?: string;
+          created_by?: string | null;
+          evidence?: string | null;
+          id?: string;
+          lesson: string;
+          organization_id: string;
+          session_id: string;
+        };
+        Update: {
+          applies_to?: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at?: string;
+          created_by?: string | null;
+          evidence?: string | null;
+          id?: string;
+          lesson?: string;
+          organization_id?: string;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_lessons_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "session_lessons_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      session_proposals: {
+        Row: {
+          created_at: string;
+          id: string;
+          organization_id: string;
+          proposal_id: string;
+          session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          proposal_id: string;
+          session_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          proposal_id?: string;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_proposals_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "session_proposals_organization_id_proposal_id_fkey";
+            columns: ["organization_id", "proposal_id"];
+            isOneToOne: false;
+            referencedRelation: "proposals";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "session_proposals_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       tasks: {
         Row: {
           assignee_id: string | null;
@@ -1495,12 +1721,102 @@ export type Database = {
           },
         ];
       };
+      touches: {
+        Row: {
+          contact_id: string;
+          created_at: string;
+          direction: Database["public"]["Enums"]["touch_direction"];
+          grant_id: string | null;
+          happened_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["touch_kind"];
+          logged_by: string | null;
+          organization_id: string;
+          session_id: string | null;
+          summary: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          contact_id: string;
+          created_at?: string;
+          direction: Database["public"]["Enums"]["touch_direction"];
+          grant_id?: string | null;
+          happened_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["touch_kind"];
+          logged_by?: string | null;
+          organization_id: string;
+          session_id?: string | null;
+          summary: string;
+        };
+        Update: {
+          contact_id?: string;
+          created_at?: string;
+          direction?: Database["public"]["Enums"]["touch_direction"];
+          grant_id?: string | null;
+          happened_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["touch_kind"];
+          logged_by?: string | null;
+          organization_id?: string;
+          session_id?: string | null;
+          summary?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "touches_organization_id_contact_id_fkey";
+            columns: ["organization_id", "contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      accept_learning_proposal: {
+        Args: { p_proposal_id: string; p_record: Json };
+        Returns: string;
+      };
       create_organization: { Args: { p_name: string }; Returns: string };
+      record_learning_proposals: {
+        Args: { p_items: Json; p_session_id: string };
+        Returns: string[];
+      };
+      supersede_knowledge_fact: {
+        Args: {
+          p_confidence: Database["public"]["Enums"]["knowledge_confidence"];
+          p_fact: string;
+          p_old_id: string;
+          p_source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          p_source_ref: string;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       actor_kind: "person" | "agent" | "system";
@@ -1508,6 +1824,7 @@ export type Database = {
       award_report_kind:
         "financial" | "performance" | "final_financial" | "final_performance" | "other";
       award_report_status: "due" | "submitted" | "accepted";
+      contact_publishability: "private" | "public";
       deadline_kind: "loi" | "application" | "report" | "internal" | "other";
       feed_kind: "ical" | "rss";
       funder_kind: "foundation" | "corporate" | "federal" | "state" | "county" | "city" | "other";
@@ -1523,13 +1840,29 @@ export type Database = {
         | "reporting"
         | "closed";
       indirect_cost_method: "de_minimis" | "negotiated_rate" | "none" | "other";
+      knowledge_confidence: "stated" | "likely" | "guess";
+      knowledge_source_kind: "filing" | "website" | "document" | "person" | "ai";
+      knowledge_status: "proposed" | "confirmed" | "superseded";
+      knowledge_subject_kind: "organization" | "funder" | "opportunity" | "contact" | "grant";
+      learning_session_status: "open" | "closed";
+      lesson_applies_to: "prospecting" | "outreach" | "application" | "post_award" | "general";
       membership_role: "owner" | "admin" | "editor" | "viewer";
       opportunity_status: "forecasted" | "open" | "closed" | "custom";
+      organization_kind: "seeker" | "funder" | "company";
       pipeline_preset: "standard" | "sbir";
+      playbook_key:
+        | "seeker-prospecting"
+        | "seeker-outreach"
+        | "application-prep"
+        | "post-award-reporting"
+        | "funder-grantee-outreach"
+        | "company-nondilutive";
       proposal_status: "proposed" | "accepted" | "rejected";
       reminder_mode: "each" | "digest" | "off";
       report_frequency: "quarterly" | "semiannual" | "annual" | "none";
       task_status: "open" | "done";
+      touch_direction: "out" | "in";
+      touch_kind: "email" | "call" | "meeting" | "letter" | "note";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1651,6 +1984,7 @@ export const Constants = {
         "other",
       ],
       award_report_status: ["due", "submitted", "accepted"],
+      contact_publishability: ["private", "public"],
       deadline_kind: ["loi", "application", "report", "internal", "other"],
       feed_kind: ["ical", "rss"],
       funder_kind: ["foundation", "corporate", "federal", "state", "county", "city", "other"],
@@ -1667,13 +2001,30 @@ export const Constants = {
         "closed",
       ],
       indirect_cost_method: ["de_minimis", "negotiated_rate", "none", "other"],
+      knowledge_confidence: ["stated", "likely", "guess"],
+      knowledge_source_kind: ["filing", "website", "document", "person", "ai"],
+      knowledge_status: ["proposed", "confirmed", "superseded"],
+      knowledge_subject_kind: ["organization", "funder", "opportunity", "contact", "grant"],
+      learning_session_status: ["open", "closed"],
+      lesson_applies_to: ["prospecting", "outreach", "application", "post_award", "general"],
       membership_role: ["owner", "admin", "editor", "viewer"],
       opportunity_status: ["forecasted", "open", "closed", "custom"],
+      organization_kind: ["seeker", "funder", "company"],
       pipeline_preset: ["standard", "sbir"],
+      playbook_key: [
+        "seeker-prospecting",
+        "seeker-outreach",
+        "application-prep",
+        "post-award-reporting",
+        "funder-grantee-outreach",
+        "company-nondilutive",
+      ],
       proposal_status: ["proposed", "accepted", "rejected"],
       reminder_mode: ["each", "digest", "off"],
       report_frequency: ["quarterly", "semiannual", "annual", "none"],
       task_status: ["open", "done"],
+      touch_direction: ["out", "in"],
+      touch_kind: ["email", "call", "meeting", "letter", "note"],
     },
   },
 } as const;

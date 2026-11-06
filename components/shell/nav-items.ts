@@ -2,5 +2,8 @@
 export const NAV_ITEMS: { href: string; label: string }[] = [
   { href: "/grants", label: "Grants" },
   { href: "/calendar", label: "Calendar" },
+  { href: "/learning", label: "Learning" },
+  { href: "/knowledge", label: "Knowledge" },
+  { href: "/contacts", label: "Contacts" },
   { href: "/settings", label: "Settings" },
 ];

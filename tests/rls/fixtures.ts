@@ -31,6 +31,12 @@ export const TENANT_TABLES = [
   "reminder_preferences",
   "reminder_log",
   "contacts",
+  // Phase AA
+  "knowledge_facts",
+  "learning_sessions",
+  "touches",
+  "session_lessons",
+  "session_proposals",
   "memberships",
 ] as const;
 
@@ -51,6 +57,9 @@ export interface Org {
   budgetLineId: string;
   /** A second grant with no award yet, so an award row can be inserted in the tests. */
   spareGrantId: string;
+  contactId: string;
+  sessionId: string;
+  proposalId: string;
 }
 
 export interface World {
@@ -85,7 +94,7 @@ async function createOrg(db: Db, name: string, owner: string): Promise<string> {
  * A row for `table` in organization `org`, written in `as` the given person. Used both for the
  * fixtures and for the write attempts the tests expect to fail.
  */
-export interface OrgRef {
+export type OrgRef = {
   id: string;
   funderId: string;
   grantId: string;
@@ -93,7 +102,11 @@ export interface OrgRef {
   awardId: string;
   budgetLineId: string;
   spareGrantId: string;
-}
+  contactId: string;
+  sessionId: string;
+  /** A proposal no session link points at yet, so a link to it can be inserted. */
+  proposalId: string;
+};
 
 export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
   const tag = randomUUID().slice(0, 8);
@@ -197,6 +210,49 @@ export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
       return { ...base, user_id: person, item_key: `deadline:${tag}`, days_before: 7 };
     case "contacts":
       return { ...base, grant_id: org.grantId, name: `Contact ${tag}`, created_by: person };
+    case "knowledge_facts":
+      return {
+        ...base,
+        subject_kind: "funder",
+        subject_id: org.funderId,
+        fact: `Fact ${tag}`,
+        source_kind: "website",
+        source_ref: "https://example.org/about",
+        confidence: "stated",
+        status: "confirmed",
+        created_by: person,
+      };
+    case "learning_sessions":
+      return {
+        ...base,
+        playbook_key: "seeker-prospecting",
+        goal: `Goal ${tag}`,
+        packet: { schema_version: 1 },
+        opened_by: person,
+      };
+    case "touches":
+      return {
+        ...base,
+        contact_id: org.contactId,
+        grant_id: org.grantId,
+        session_id: org.sessionId,
+        kind: "email",
+        direction: "out",
+        summary: `Touch ${tag}`,
+        logged_by: person,
+      };
+    case "session_lessons":
+      return {
+        ...base,
+        session_id: org.sessionId,
+        applies_to: "prospecting",
+        lesson: `Lesson ${tag}`,
+        evidence: "Session notes.",
+        created_by: person,
+      };
+    case "session_proposals":
+      // Each link needs a proposal of its own (unique proposal_id): the free one of the organization.
+      return { ...base, session_id: org.sessionId, proposal_id: org.proposalId };
     case "memberships":
       // Overridden by callers that need a specific person; a fresh id never matches a real user.
       return { ...base, user_id: person, role: "viewer" };
@@ -204,7 +260,7 @@ export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
 }
 
 async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
-  const ref: OrgRef = {
+  const empty: OrgRef = {
     id,
     funderId: "",
     grantId: "",
@@ -212,9 +268,12 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     awardId: "",
     budgetLineId: "",
     spareGrantId: "",
+    contactId: "",
+    sessionId: "",
+    proposalId: "",
   };
-  const funder = await insertRow(db, "funders", rowFor("funders", ref, owner));
-  ref.funderId = funder.id as string;
+  const funder = await insertRow(db, "funders", rowFor("funders", empty, owner));
+  const ref: OrgRef = { ...empty, funderId: funder.id as string };
   const opportunity = await insertRow(db, "opportunities", rowFor("opportunities", ref, owner));
   const grant = await insertRow(db, "grants", {
     ...rowFor("grants", ref, owner),
@@ -232,6 +291,10 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
   ref.spareGrantId = spare.id as string;
   const line = await insertRow(db, "budget_lines", rowFor("budget_lines", ref, owner));
   ref.budgetLineId = line.id as string;
+  const contact = await insertRow(db, "contacts", rowFor("contacts", ref, owner));
+  ref.contactId = contact.id as string;
+  const session = await insertRow(db, "learning_sessions", rowFor("learning_sessions", ref, owner));
+  ref.sessionId = session.id as string;
 
   const rows: Partial<Record<TenantTable, string>> = {
     funders: ref.funderId,
@@ -240,6 +303,8 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     external_feeds: ref.feedId,
     awards: ref.awardId,
     budget_lines: ref.budgetLineId,
+    contacts: ref.contactId,
+    learning_sessions: ref.sessionId,
   };
   for (const table of [
     "proposals",
@@ -257,10 +322,21 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     "calendar_tokens",
     "reminder_preferences",
     "reminder_log",
-    "contacts",
+    "knowledge_facts",
+    "touches",
+    "session_lessons",
   ] as const) {
     rows[table] = (await insertRow(db, table, rowFor(table, ref, owner))).id as string;
   }
+  // The fixture link points at a proposal of its own; rows.proposals stays free for write tests.
+  ref.proposalId = rows.proposals!;
+  const linked = await insertRow(db, "proposals", rowFor("proposals", ref, owner));
+  rows.session_proposals = (
+    await insertRow(db, "session_proposals", {
+      ...rowFor("session_proposals", ref, owner),
+      proposal_id: linked.id,
+    })
+  ).id as string;
   // Written by the trigger when the grant was created.
   const [history] = await db.query(
     "select id from public.grant_stage_history where grant_id = $1",
@@ -284,6 +360,9 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     awardId: ref.awardId,
     budgetLineId: ref.budgetLineId,
     spareGrantId: ref.spareGrantId,
+    contactId: ref.contactId,
+    sessionId: ref.sessionId,
+    proposalId: ref.proposalId,
   };
 }
 

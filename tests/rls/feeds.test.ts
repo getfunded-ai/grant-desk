@@ -196,7 +196,9 @@ describe("the reminder log", () => {
 });
 
 describe("contacts", () => {
-  it("must belong to a grant or a funder", async () => {
+  it("may exist on its own since Phase AA shares the table, and stays private by default", async () => {
+    // Phase E required a grant or a funder; Phase AA's migration drops that rule so an organization
+    // can keep people it has not tied to a grant yet (learning loops), with publishability "private".
     const result = await asUser(world.alice, () =>
       attempt(
         db,
@@ -207,7 +209,7 @@ describe("contacts", () => {
         }),
       ),
     );
-    expect(result.error?.message).toMatch(/check constraint/);
+    expect(result.error ?? null).toBeNull();
   });
 
   it("cannot point at another organization's grant or funder", async () => {
