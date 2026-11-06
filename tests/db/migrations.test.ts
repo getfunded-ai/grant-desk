@@ -4,7 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { ALL_PUBLIC_TABLES } from "../rls/fixtures";
+import { ALL_PUBLIC_TABLES, CATALOG_TABLES } from "../rls/fixtures";
 import { type Db, migrationFiles, openDb } from "./harness";
 
 let db: Db;
@@ -71,13 +71,14 @@ describe("the data rules hold for every table in public", () => {
     }
   });
 
-  it("every tenant table has a non-null organization_id (the catalog and the two people tables aside)", async () => {
+  it("every tenant table has a non-null organization_id (the catalog tables and the two people tables aside)", async () => {
     const rows = await db.query<{ table_name: string; is_nullable: string }>(
       "select table_name, is_nullable from information_schema.columns where table_schema = 'public' and column_name = 'organization_id'",
     );
     const byTable = new Map(rows.map((r) => [r.table_name, r.is_nullable]));
     for (const table of await publicTables()) {
       if (table === "organizations" || table === "profiles") continue;
+      if ((CATALOG_TABLES as readonly string[]).includes(table)) continue;
       expect(byTable.has(table), `${table} has organization_id`).toBe(true);
       if (table !== "opportunities")
         expect(byTable.get(table), `${table}.organization_id is not null`).toBe("NO");
