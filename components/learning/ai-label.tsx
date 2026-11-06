@@ -9,7 +9,7 @@ export function AiLabel({ by, evidence }: { by: ProducedBy; evidence: Evidence[]
         {by.tool && by.tool !== "Not stated" ? ` · ${by.tool}` : ""}
       </p>
       {evidence.length === 0 ? (
-        <p>Evidence: none given.</p>
+        <p>Evidence: not given.</p>
       ) : (
         <ul className="list-disc space-y-0.5 pl-4">
           {evidence.map((e, i) => (

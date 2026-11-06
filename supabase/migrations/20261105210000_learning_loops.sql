@@ -294,7 +294,9 @@ create table public.touches (
   summary text not null check (length(btrim(summary)) between 1 and 4000),
   logged_by uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now(),
-  foreign key (organization_id, contact_id) references public.contacts (organization_id, id) on delete cascade,
+  -- A touch is the record of who was spoken to; removing a contact does not erase it. (No action:
+  -- deleting the whole organization still cascades here through organization_id.)
+  foreign key (organization_id, contact_id) references public.contacts (organization_id, id) on delete no action,
   foreign key (organization_id, grant_id) references public.grants (organization_id, id) on delete cascade,
   foreign key (organization_id, session_id) references public.learning_sessions (organization_id, id)
     on delete set null (session_id)

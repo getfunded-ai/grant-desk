@@ -261,7 +261,7 @@ export function renderPacketMarkdown(
   lines.push("");
   lines.push("## Lessons from earlier sessions (newest first)");
   lines.push("");
-  if (packet.lessons.length === 0) lines.push("None yet: this is the first session.");
+  if (packet.lessons.length === 0) lines.push("Not available yet: this is the first session.");
   for (const l of packet.lessons)
     lines.push(
       `- Session ${l.session_number} (${l.applies_to}): ${l.lesson} · Evidence: ${l.evidence}`,
