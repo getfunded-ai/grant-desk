@@ -26,6 +26,11 @@ export const TENANT_TABLES = [
   "budget_actuals",
   "reimbursements",
   "compliance_items",
+  "feed_items",
+  "calendar_tokens",
+  "reminder_preferences",
+  "reminder_log",
+  "contacts",
   "memberships",
 ] as const;
 
@@ -58,6 +63,10 @@ export interface World {
   A: Org;
   B: Org;
   catalogOpportunityId: string;
+}
+
+function randomHex64(): string {
+  return (randomUUID() + randomUUID()).replace(/-/g, "");
 }
 
 export async function createUser(db: Db, email: string): Promise<string> {
@@ -172,6 +181,22 @@ export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
       return { ...base, award_id: org.awardId, invoice_number: `INV-${tag}`, created_by: person };
     case "compliance_items":
       return { ...base, award_id: org.awardId, title: `Item ${tag}`, created_by: person };
+    case "feed_items":
+      return {
+        ...base,
+        external_feed_id: org.feedId,
+        external_uid: `item-${tag}`,
+        title: `News ${tag}`,
+        created_by: person,
+      };
+    case "calendar_tokens":
+      return { ...base, token_hash: randomHex64(), label: `Token ${tag}`, created_by: person };
+    case "reminder_preferences":
+      return { ...base, user_id: person, mode: "digest" };
+    case "reminder_log":
+      return { ...base, user_id: person, item_key: `deadline:${tag}`, days_before: 7 };
+    case "contacts":
+      return { ...base, grant_id: org.grantId, name: `Contact ${tag}`, created_by: person };
     case "memberships":
       // Overridden by callers that need a specific person; a fresh id never matches a real user.
       return { ...base, user_id: person, role: "viewer" };
@@ -228,6 +253,11 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     "budget_actuals",
     "reimbursements",
     "compliance_items",
+    "feed_items",
+    "calendar_tokens",
+    "reminder_preferences",
+    "reminder_log",
+    "contacts",
   ] as const) {
     rows[table] = (await insertRow(db, table, rowFor(table, ref, owner))).id as string;
   }
