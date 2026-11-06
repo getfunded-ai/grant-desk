@@ -10,7 +10,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
-| AA    | Learning loops          | in review   | #33                               | PGlite tests (447), PostgREST check, typecheck, lint, build       |
+| AA    | Learning loops          | in review   | #33                                | PGlite tests (447), PostgREST check, typecheck, lint, build       |
 
 ## Decisions
 
