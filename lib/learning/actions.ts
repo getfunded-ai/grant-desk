@@ -372,8 +372,8 @@ export async function addContact(_prev: FormState, formData: FormData): Promise<
   const { error } = await ctx.db.from("contacts").insert({
     organization_id: ctx.organizationId,
     name,
-    role: readText(formData, "role", 300) || null,
-    email: readText(formData, "email", 320) || null,
+    role: readText(formData, "role", 200) || null,
+    email: readText(formData, "email", 254) || null,
     phone: readText(formData, "phone", 50) || null,
     funder_id: funderId,
     publishability,

@@ -23,7 +23,7 @@ export function ContactForm({ funders }: { funders: { id: string; name: string }
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="contact-role">Role</Label>
-          <Input id="contact-role" name="role" maxLength={300} autoComplete="off" />
+          <Input id="contact-role" name="role" maxLength={200} autoComplete="off" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="contact-funder">Funder</Label>
@@ -38,7 +38,7 @@ export function ContactForm({ funders }: { funders: { id: string; name: string }
         </div>
         <div className="space-y-2">
           <Label htmlFor="contact-email">Email (private)</Label>
-          <Input id="contact-email" name="email" type="email" maxLength={320} autoComplete="off" />
+          <Input id="contact-email" name="email" type="email" maxLength={254} autoComplete="off" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="contact-phone">Phone (private)</Label>
