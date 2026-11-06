@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Tables } from "@/lib/db/types";
 
-import { GRANTS_GOV_SOURCE, NONPROFIT_ELIGIBILITIES } from "./codes";
+import { GRANTS_GOV_SOURCE, NONPROFIT_ELIGIBILITIES, UNRESTRICTED_ELIGIBILITY } from "./codes";
 import {
   type Agency,
   type GrantsGovFields,
@@ -144,8 +144,8 @@ export async function searchOpportunities(
     filters.eligibility === "any"
       ? null
       : filters.eligibility === "nonprofit"
-        ? [...NONPROFIT_ELIGIBILITIES]
-        : [filters.eligibility];
+        ? [...NONPROFIT_ELIGIBILITIES, UNRESTRICTED_ELIGIBILITY]
+        : [filters.eligibility, UNRESTRICTED_ELIGIBILITY];
   const { data, error } = await client.rpc("search_opportunities", {
     p_keyword: filters.keyword || null,
     p_statuses: filters.statuses,

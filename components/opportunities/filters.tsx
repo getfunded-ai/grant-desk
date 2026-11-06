@@ -44,9 +44,9 @@ export function OpportunityFilters({
         <div className="space-y-2">
           <Label htmlFor="elig">Who may apply</Label>
           <select id="elig" name="elig" defaultValue={filters.eligibility} className={selectClass}>
-            <option value="nonprofit">Nonprofits (501(c)(3) or not)</option>
-            <option value="12">501(c)(3) nonprofits only</option>
-            <option value="13">Nonprofits without 501(c)(3) only</option>
+            <option value="nonprofit">Nonprofits (501(c)(3) or not), or unrestricted</option>
+            <option value="12">501(c)(3) nonprofits, or unrestricted</option>
+            <option value="13">Nonprofits without 501(c)(3), or unrestricted</option>
             <option value="any">Any applicant type</option>
           </select>
         </div>
