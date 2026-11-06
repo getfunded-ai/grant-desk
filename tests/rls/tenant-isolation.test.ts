@@ -44,6 +44,12 @@ const TOUCH: Record<TenantTable, [string, unknown]> = {
   documents: ["name", "changed"],
   notes: ["body", "changed"],
   boilerplate: ["title", "changed"],
+  awards: ["award_number", "changed"],
+  award_reports: ["title", "changed"],
+  budget_lines: ["category", "changed"],
+  budget_actuals: ["description", "changed"],
+  reimbursements: ["invoice_number", "changed"],
+  compliance_items: ["title", "changed"],
   memberships: ["role", "viewer"],
 };
 

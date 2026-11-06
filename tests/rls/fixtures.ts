@@ -20,6 +20,12 @@ export const TENANT_TABLES = [
   "documents",
   "notes",
   "boilerplate",
+  "awards",
+  "award_reports",
+  "budget_lines",
+  "budget_actuals",
+  "reimbursements",
+  "compliance_items",
   "memberships",
 ] as const;
 
@@ -36,6 +42,10 @@ export interface Org {
   grantId: string;
   opportunityId: string;
   feedId: string;
+  awardId: string;
+  budgetLineId: string;
+  /** A second grant with no award yet, so an award row can be inserted in the tests. */
+  spareGrantId: string;
 }
 
 export interface World {
@@ -66,11 +76,17 @@ async function createOrg(db: Db, name: string, owner: string): Promise<string> {
  * A row for `table` in organization `org`, written in `as` the given person. Used both for the
  * fixtures and for the write attempts the tests expect to fail.
  */
-export function rowFor(
-  table: TenantTable,
-  org: { id: string; funderId: string; grantId: string; feedId: string },
-  person: string,
-): Row {
+export interface OrgRef {
+  id: string;
+  funderId: string;
+  grantId: string;
+  feedId: string;
+  awardId: string;
+  budgetLineId: string;
+  spareGrantId: string;
+}
+
+export function rowFor(table: TenantTable, org: OrgRef, person: string): Row {
   const tag = randomUUID().slice(0, 8);
   const base = { organization_id: org.id };
   switch (table) {
@@ -129,6 +145,33 @@ export function rowFor(
       return { ...base, grant_id: org.grantId, body: `Note ${tag}`, created_by: person };
     case "boilerplate":
       return { ...base, title: `Answer ${tag}`, body: "Our mission.", created_by: person };
+    case "awards":
+      // One award per grant: the fixture grant already has one, so this uses the spare grant.
+      return { ...base, grant_id: org.spareGrantId, is_federal: true, created_by: person };
+    case "award_reports":
+      return {
+        ...base,
+        award_id: org.awardId,
+        kind: "financial",
+        title: `Report ${tag}`,
+        due_date: "2027-04-30",
+        created_by: person,
+      };
+    case "budget_lines":
+      return { ...base, award_id: org.awardId, category: `Line ${tag}`, created_by: person };
+    case "budget_actuals":
+      return {
+        ...base,
+        award_id: org.awardId,
+        budget_line_id: org.budgetLineId,
+        spent_on: "2027-01-15",
+        amount: "125.50",
+        created_by: person,
+      };
+    case "reimbursements":
+      return { ...base, award_id: org.awardId, invoice_number: `INV-${tag}`, created_by: person };
+    case "compliance_items":
+      return { ...base, award_id: org.awardId, title: `Item ${tag}`, created_by: person };
     case "memberships":
       // Overridden by callers that need a specific person; a fresh id never matches a real user.
       return { ...base, user_id: person, role: "viewer" };
@@ -136,12 +179,17 @@ export function rowFor(
 }
 
 async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
-  const funder = await insertRow(
-    db,
-    "funders",
-    rowFor("funders", { id, funderId: "", grantId: "", feedId: "" }, owner),
-  );
-  const ref = { id, funderId: funder.id as string, grantId: "", feedId: "" };
+  const ref: OrgRef = {
+    id,
+    funderId: "",
+    grantId: "",
+    feedId: "",
+    awardId: "",
+    budgetLineId: "",
+    spareGrantId: "",
+  };
+  const funder = await insertRow(db, "funders", rowFor("funders", ref, owner));
+  ref.funderId = funder.id as string;
   const opportunity = await insertRow(db, "opportunities", rowFor("opportunities", ref, owner));
   const grant = await insertRow(db, "grants", {
     ...rowFor("grants", ref, owner),
@@ -150,12 +198,23 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
   ref.grantId = grant.id as string;
   const feed = await insertRow(db, "external_feeds", rowFor("external_feeds", ref, owner));
   ref.feedId = feed.id as string;
+  const award = await insertRow(db, "awards", {
+    ...rowFor("awards", ref, owner),
+    grant_id: ref.grantId,
+  });
+  ref.awardId = award.id as string;
+  const spare = await insertRow(db, "grants", rowFor("grants", ref, owner));
+  ref.spareGrantId = spare.id as string;
+  const line = await insertRow(db, "budget_lines", rowFor("budget_lines", ref, owner));
+  ref.budgetLineId = line.id as string;
 
   const rows: Partial<Record<TenantTable, string>> = {
     funders: ref.funderId,
     opportunities: opportunity.id as string,
     grants: ref.grantId,
     external_feeds: ref.feedId,
+    awards: ref.awardId,
+    budget_lines: ref.budgetLineId,
   };
   for (const table of [
     "proposals",
@@ -165,6 +224,10 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     "documents",
     "notes",
     "boilerplate",
+    "award_reports",
+    "budget_actuals",
+    "reimbursements",
+    "compliance_items",
   ] as const) {
     rows[table] = (await insertRow(db, table, rowFor(table, ref, owner))).id as string;
   }
@@ -188,6 +251,9 @@ async function fillOrg(db: Db, id: string, owner: string): Promise<Org> {
     grantId: ref.grantId,
     opportunityId: opportunity.id as string,
     feedId: ref.feedId,
+    awardId: ref.awardId,
+    budgetLineId: ref.budgetLineId,
+    spareGrantId: ref.spareGrantId,
   };
 }
 
