@@ -158,6 +158,37 @@ export function parseExtractDate(value: string | undefined): string | null {
 }
 
 /** Detail-call dates are "YYYY-MM-DD-HH-MM-SS". Returns YYYY-MM-DD or null. */
+const MONTHS: Record<string, number> = {
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+};
+
+/** The detail call's timestamps read "Nov 02, 2026 08:12:09 AM EST". Returns YYYY-MM-DD or null. */
+export function parseDetailTimestamp(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = /^([A-Za-z]{3}) (\d{1,2}), (\d{4})/.exec(value.trim());
+  if (!match) return null;
+  const month = MONTHS[match[1].toLowerCase()];
+  if (!month) return null;
+  return validDate(Number(match[3]), month, Number(match[2]));
+}
+
+/** A link the page may render: http or https only, so agency-entered text cannot become a script link. */
+function webUrl(value: string | undefined, max: number): string | undefined {
+  const text = trimTo(value, max);
+  return text && /^https?:\/\/[^\s]+$/i.test(text) ? text : undefined;
+}
+
 export function parseDetailDate(value: string | undefined): string | null {
   if (!value) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
@@ -363,7 +394,7 @@ export function mapExtractRecord(record: ExtractRecord, today: string): CatalogR
     last_updated_date: parseExtractDate(first(record, "LastUpdatedDate")) ?? undefined,
     version: trimTo(first(record, "Version"), 50),
     close_date_explanation: trimTo(first(record, "CloseDateExplanation"), 2000),
-    additional_info_url: trimTo(first(record, "AdditionalInformationURL"), 1000),
+    additional_info_url: webUrl(first(record, "AdditionalInformationURL"), 1000),
     additional_info_text: trimTo(first(record, "AdditionalInformationText"), 2000),
     contact: Object.keys(contact).length ? contact : undefined,
     forecast: forecastDates && Object.keys(forecastDates).length ? forecastDates : undefined,
@@ -545,13 +576,13 @@ export function mapFetchedOpportunity(
     cost_sharing: typeof block.costSharing === "boolean" ? block.costSharing : undefined,
     archive_date: archiveDate ?? undefined,
     archived: decided.archived || undefined,
-    last_updated_date: undefined,
+    last_updated_date: parseDetailTimestamp(block.lastUpdatedDate) ?? undefined,
     version:
       block.version === undefined
         ? undefined
         : `${forecast ? "Forecast" : "Synopsis"} ${block.version}`,
     close_date_explanation: trimTo(forecast ? undefined : block.responseDateDesc, 2000),
-    additional_info_url: trimTo(block.fundingDescLinkUrl, 1000),
+    additional_info_url: webUrl(block.fundingDescLinkUrl, 1000),
     additional_info_text: trimTo(block.fundingDescLinkDesc, 2000),
     contact: Object.keys(contact).length ? contact : undefined,
     forecast: forecastDates && Object.keys(forecastDates).length ? forecastDates : undefined,
@@ -635,9 +666,9 @@ export function mapFetchedOpportunity(
       status_at_source: trimTo(detail.ost, 20) ?? null,
       assist_compatible:
         typeof detail.assistCompatible === "boolean" ? detail.assistCompatible : null,
-      assist_url: trimTo(detail.assistURL, 1000) ?? null,
+      assist_url: webUrl(detail.assistURL, 1000) ?? null,
       related_opportunity_count: Array.isArray(detail.relatedOpps) ? detail.relatedOpps.length : 0,
-      funding_description_url: trimTo(block.fundingDescLinkUrl, 1000) ?? null,
+      funding_description_url: webUrl(block.fundingDescLinkUrl, 1000) ?? null,
       close_date_explanation:
         trimTo(forecast ? block.estApplicationResponseDateDesc : block.responseDateDesc, 2000) ??
         null,

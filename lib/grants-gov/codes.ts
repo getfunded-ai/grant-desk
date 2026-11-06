@@ -27,6 +27,9 @@ export const ELIGIBILITY_LABELS: Record<string, string> = {
 /** The two eligibility codes that mean "nonprofit". The browse page starts with these selected. */
 export const NONPROFIT_ELIGIBILITIES = ["12", "13"] as const;
 
+/** "Unrestricted": open to any type of entity, so a nonprofit may apply. Included with every nonprofit choice. */
+export const UNRESTRICTED_ELIGIBILITY = "99";
+
 /** Category of funding activity. */
 export const FUNDING_CATEGORY_LABELS: Record<string, string> = {
   ACA: "Affordable Care Act",
