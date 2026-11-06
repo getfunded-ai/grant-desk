@@ -14,7 +14,7 @@ Dates assume two to four sessions at once and answers from Zach within a day.
 | B     | Data model and security       | high | C         | in review   |
 | C     | Login, shell, deploy          | high | B         | done        |
 | D     | Grants.gov sync and browse    | high | E         | not started |
-| E     | Pipeline, calendar, reminders | high | D         | not started |
+| E     | Pipeline, calendar, reminders | high | D         | in review   |
 
 Gate: a maintainer signs in on the live site, creates an organization, adds a federal opportunity,
 subscribes to an agency's iCal feed, and sees the deadline on their own calendar.
