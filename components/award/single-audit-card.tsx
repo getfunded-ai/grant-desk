@@ -3,6 +3,17 @@ import { formatDate } from "@/lib/compliance/dates";
 import { ecfrSectionUrl } from "@/lib/compliance/rules";
 import type { SingleAuditStatus } from "@/lib/compliance/single-audit";
 
+function headline(status: SingleAuditStatus): string {
+  const fy = status.fiscalYear.label;
+  if (status.basis === "recorded_spend")
+    return `Single audit likely required for ${fy}: recorded federal spending reached the threshold.`;
+  if (status.basis === "awards_in_force")
+    return `Single audit possible for ${fy}: federal awards in force reach the threshold. Check with your auditor.`;
+  if (status.awardsInForce === null && status.recordedSpend === 0)
+    return `Cannot tell for ${fy}: no federal award amounts or spending recorded yet.`;
+  return `Below the single-audit threshold for ${fy}, on what is recorded here.`;
+}
+
 /** The organization-wide single-audit flag (2 CFR 200.501). Shown on every federal award. */
 export function SingleAuditCard({ status }: { status: SingleAuditStatus }) {
   const { fiscalYear } = status;
@@ -14,9 +25,7 @@ export function SingleAuditCard({ status }: { status: SingleAuditStatus }) {
         }`}
         role="status"
       >
-        {status.flagged
-          ? `Single audit likely required for ${fiscalYear.label}.`
-          : `Below the single-audit threshold for ${fiscalYear.label}, on what is recorded here.`}
+        {headline(status)}
       </p>
       <dl className="grid grid-cols-[1fr_auto] gap-y-1">
         <dt className="text-muted-foreground">Fiscal year</dt>

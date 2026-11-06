@@ -11,7 +11,8 @@ import { toNumber, roundMoney } from "./money";
 
 /** Server actions for budget lines and actuals. Same rules as lib/compliance/actions.ts. */
 
-const MAX_CSV_BYTES = 2 * 1024 * 1024;
+// Next.js server actions accept 1 MB by default; the form says the same.
+const MAX_CSV_BYTES = 1024 * 1024;
 
 function text(formData: FormData, field: string, max = 1000): string | null {
   const value = String(formData.get(field) ?? "")
@@ -151,7 +152,7 @@ export async function importActualsCsv(_prev: FormState, formData: FormData): Pr
   let csv = "";
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_CSV_BYTES)
-      return error("The file is larger than 2 MB. Split it and try again.");
+      return error("The file is larger than 1 MB. Split it and try again.");
     csv = await file.text();
   } else {
     csv = String(formData.get("pasted") ?? "");
@@ -211,7 +212,11 @@ export async function importActualsCsv(_prev: FormState, formData: FormData): Pr
   const { error: insertError } = await supabase.from("budget_actuals").insert(rows);
   if (insertError) {
     console.error("importActualsCsv insert failed", insertError.message);
-    return error("We could not save the imported rows. Nothing was imported. Try again.");
+    return error(
+      newCategories.length > 0
+        ? `We could not save the imported rows. ${newCategories.length} new budget line${newCategories.length === 1 ? " was" : "s were"} created but no spending was imported. Try again.`
+        : "We could not save the imported rows. Nothing was imported. Try again.",
+    );
   }
 
   refresh(grantId);

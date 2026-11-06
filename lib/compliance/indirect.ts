@@ -74,14 +74,28 @@ export function parseAmountList(text: string): number[] {
     .filter((n): n is number => n !== null);
 }
 
-/** "$12,500.75" → 12500.75; "(300)" → -300; anything else → null. */
+/**
+ * "$12,500.75" → 12500.75; "(300)" or "-300" → -300; anything else → null. Only digits, one dot,
+ * commas as thousands separators, a leading sign or currency sign, and parentheses are accepted, so
+ * "1e5" or "€1.234,56" is refused rather than read as something else.
+ */
 export function parseAmount(text: string): number | null {
-  const trimmed = text.trim();
+  let trimmed = text.trim();
   if (!trimmed) return null;
-  const negative = /^\(.*\)$/.test(trimmed) || trimmed.startsWith("-");
-  const digits = trimmed.replace(/[^0-9.]/g, "");
-  if (!digits || !/^\d*(\.\d+)?$/.test(digits) || digits === ".") return null;
-  const value = Number(digits);
+  let negative = false;
+  if (/^\(.*\)$/.test(trimmed)) {
+    negative = true;
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+  if (trimmed.startsWith("-")) {
+    negative = !negative;
+    trimmed = trimmed.slice(1).trim();
+  } else if (trimmed.startsWith("+")) {
+    trimmed = trimmed.slice(1).trim();
+  }
+  trimmed = trimmed.replace(/^(US\$|USD|\$)\s*/i, "");
+  if (!/^\d{1,3}(,\d{3})*(\.\d*)?$|^\d+(\.\d*)?$/.test(trimmed)) return null;
+  const value = Number(trimmed.replace(/,/g, ""));
   if (!Number.isFinite(value)) return null;
   return negative ? -value : value;
 }

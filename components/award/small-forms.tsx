@@ -162,7 +162,7 @@ export function CsvImportForm(ids: Ids) {
         <p className="text-xs text-muted-foreground">
           First row names the columns: date, category, amount, and optionally description.
           Categories that match a budget line go onto it; new ones become lines with no budgeted
-          amount. Up to 2 MB.
+          amount. Up to 1 MB.
         </p>
       </div>
       <details className="text-sm">

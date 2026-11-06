@@ -353,6 +353,15 @@ export async function addReport(_prev: FormState, formData: FormData): Promise<F
   return ok("Report added to the schedule and the calendar.");
 }
 
+const SUBMITTED_TAG = " (submitted)";
+
+/** Adds or removes the tag that tells the calendar a report went out. */
+function withSubmittedTag(title: string, submitted: boolean): string {
+  const bare = title.endsWith(SUBMITTED_TAG) ? title.slice(0, -SUBMITTED_TAG.length) : title;
+  const tagged = submitted ? `${bare}${SUBMITTED_TAG}` : bare;
+  return tagged.length > 500 ? bare : tagged;
+}
+
 async function findReport(access: Write, reportId: string): Promise<AwardReportRow | null> {
   const { data } = await access.supabase
     .from("award_reports")
@@ -376,9 +385,14 @@ export async function markReportSubmitted(
   if (!access.ok) return access.state;
   const report = await findReport(access, reportId);
   if (!report) return error("This report could not be found.");
+  // The title change carries "(submitted)" onto the calendar entry through the sync trigger.
   const { error: updateError } = await access.supabase
     .from("award_reports")
-    .update({ status: "submitted", submitted_on: submittedOn })
+    .update({
+      status: "submitted",
+      submitted_on: submittedOn,
+      title: withSubmittedTag(report.title, true),
+    })
     .eq("id", reportId);
   if (updateError) {
     console.error("markReportSubmitted failed", updateError.message);
@@ -399,9 +413,11 @@ export async function reopenReport(_prev: FormState, formData: FormData): Promis
   if (!grantId || !reportId) return error("This report could not be found.");
   const access = await requireEditableGrant(grantId);
   if (!access.ok) return access.state;
+  const report = await findReport(access, reportId);
+  if (!report) return error("This report could not be found.");
   const { error: updateError } = await access.supabase
     .from("award_reports")
-    .update({ status: "due", submitted_on: null })
+    .update({ status: "due", submitted_on: null, title: withSubmittedTag(report.title, false) })
     .eq("id", reportId);
   if (updateError) return error("We could not reopen the report. Try again.");
   await log(access, "award.report_reopened", "A report was marked due again.");

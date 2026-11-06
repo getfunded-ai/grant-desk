@@ -62,9 +62,10 @@ export function reportingPeriods(
   const months = MONTHS_PER_PERIOD[frequency];
   const periods: Array<{ start: IsoDate; end: IsoDate }> = [];
   let start = periodStart;
-  // Guard against a runaway loop on bad input: 50 years of quarterly periods is plenty.
-  while (compareIsoDates(start, periodEnd) <= 0 && periods.length < 200) {
-    const nextStart = addMonths(start, months);
+  // Each boundary is measured from the first day, so a start on the 29th to 31st does not drift
+  // when a short month clamps it. 200 periods is 50 years of quarters: plenty.
+  for (let index = 1; compareIsoDates(start, periodEnd) <= 0 && index <= 200; index += 1) {
+    const nextStart = addMonths(periodStart, months * index);
     const end =
       compareIsoDates(addDays(nextStart, -1), periodEnd) < 0 ? addDays(nextStart, -1) : periodEnd;
     periods.push({ start, end });
