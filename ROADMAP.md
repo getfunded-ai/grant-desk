@@ -28,6 +28,7 @@ subscribes to an agency's iCal feed, and sees the deadline on their own calendar
 | H     | Funder profiles             | medium | F, G      | not started |
 | I     | The US$1 tier               | high   | J         | not started |
 | J     | Public site, SEO, analytics | high   | I         | not started |
+| AA    | Learning loops              | high   | D, E, G   | in review   |
 
 Gate: the repo is public; the site is on its real address; a test card buys the US$1 plan; then live mode.
 

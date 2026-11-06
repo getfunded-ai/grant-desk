@@ -44,6 +44,12 @@ const TOUCH: Record<TenantTable, [string, unknown]> = {
   documents: ["name", "changed"],
   notes: ["body", "changed"],
   boilerplate: ["title", "changed"],
+  contacts: ["name", "changed"],
+  knowledge_facts: ["status", "superseded"],
+  learning_sessions: ["lessons_summary", "changed"],
+  touches: ["summary", "changed"],
+  session_lessons: ["lesson", "changed"],
+  session_proposals: ["created_at", "2020-01-01T00:00:00Z"],
   memberships: ["role", "viewer"],
 };
 

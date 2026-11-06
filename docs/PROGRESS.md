@@ -10,6 +10,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
 | C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
+| AA    | Learning loops          | in review   | (opened below)                     | PGlite tests (447), PostgREST check, typecheck, lint, build       |
 
 ## Decisions
 
@@ -28,3 +29,18 @@ Living status. Every agent updates its own phase row and its own session-log lin
 - 2026-10-31: Phase B rebased onto the public history. Fifteen tables, row-level security on all of
   them, 262 migration and RLS tests (PGlite and the local Supabase stack), three review rounds. Nothing
   applied to the hosted database yet; that waits for the maintainer after merge.
+- 2026-11-05: Phase AA (learning loops) built in one session alongside D, E and G. One migration
+  (`organizations.kind`, `knowledge_facts`, `contacts`, `touches`, `learning_sessions`,
+  `session_lessons`, `session_proposals`, three database functions), six generic playbooks, the
+  packet builder and results validator, and the `/learning`, `/knowledge` and `/contacts` pages.
+  The "Done when" walk-through ran as a PGlite test against the real migration (session 1 → packet →
+  three hand-written items → accept two, reject one → close with a lesson → session 2 holds the
+  lesson), and the query module ran end to end against a throwaway PostgREST as a signed-in editor.
+  Not loaded in a browser: the shared local Supabase stack belongs to the other sessions tonight and
+  was not touched, so the pages were verified by `pnpm build` only. Three files outside the brief's
+  folders, each needed by Phase B's own test design or the shell: `tests/rls/fixtures.ts` and
+  `tests/rls/tenant-isolation.test.ts` (the migration test requires every new table to be listed
+  there, which puts the six tables under the cross-organization write tests), and
+  `components/shell/nav-items.ts` (its comment asks each phase to add its pages). `types/supabase.ts`
+  was regenerated from a throwaway Postgres with all four migrations. `docs/learning-session-format.md`
+  was not changed.
