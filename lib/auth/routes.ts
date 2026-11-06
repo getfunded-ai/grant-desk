@@ -4,8 +4,8 @@ export const SIGN_IN_PATH = "/sign-in";
 export const ONBOARDING_PATH = "/onboarding";
 /** Clears a session cookie Supabase no longer accepts, then shows sign-in. */
 export const SESSION_ENDED_PATH = "/auth/session-ended";
-/** Where a signed-in person lands: the pipeline (Phase E). */
-export const APP_HOME_PATH = "/grants";
+/** Where a signed-in person lands. Phase E moves this to the pipeline (/grants). */
+export const APP_HOME_PATH = "/settings";
 
 /**
  * Pages anyone may open. Everything else needs a signed-in person (deny by default).

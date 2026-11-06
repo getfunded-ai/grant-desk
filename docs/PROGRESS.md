@@ -55,7 +55,8 @@ Living status. Every agent updates its own phase row and its own session-log lin
     `https://sbir-sttr.connectwerx.org/events/?ical=1` (three events; FY26 Fall pitch deadline
     Dec 16, 2026, 2:00 PM Atlantic as the feed states it) and RSS `https://sbir-sttr.connectwerx.org/feed/`
     (one placeholder post). Both are presets on the calendar page; any iCal or RSS address works.
-  - **Shared files touched outside the brief**, each invited by a comment in the file:
-    `components/shell/nav-items.ts` (Grants and Calendar links) and `lib/auth/routes.ts`
-    (`APP_HOME_PATH` → `/grants`). `types/supabase.ts` regenerated from a scratch database
-    (additive only).
+  - **Shared file touched outside the brief**, invited by the comment in it:
+    `components/shell/nav-items.ts` (Grants and Calendar links). Sign-in still lands on
+    `/settings`: the first push changed `APP_HOME_PATH` to `/grants`, which broke a Phase C sign-in
+    test, so E-09 reverted it; the board is one click away in the header. `types/supabase.ts`
+    regenerated from a scratch database (additive only).
