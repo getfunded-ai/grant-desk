@@ -157,7 +157,6 @@ export function parseExtractDate(value: string | undefined): string | null {
   return validDate(year, month, day);
 }
 
-/** Detail-call dates are "YYYY-MM-DD-HH-MM-SS". Returns YYYY-MM-DD or null. */
 const MONTHS: Record<string, number> = {
   jan: 1,
   feb: 2,
@@ -185,10 +184,12 @@ export function parseDetailTimestamp(value: string | undefined): string | null {
 
 /** A link the page may render: http or https only, so agency-entered text cannot become a script link. */
 function webUrl(value: string | undefined, max: number): string | undefined {
-  const text = trimTo(value, max);
-  return text && /^https?:\/\/[^\s]+$/i.test(text) ? text : undefined;
+  const text = value?.replace(/\s+/g, " ").trim();
+  if (!text || text.length > max) return undefined; // a cut link would be a broken link
+  return /^https?:\/\/[^\s]+$/i.test(text) ? text : undefined;
 }
 
+/** Detail-call dates are "YYYY-MM-DD-HH-MM-SS". Returns YYYY-MM-DD or null. */
 export function parseDetailDate(value: string | undefined): string | null {
   if (!value) return null;
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
