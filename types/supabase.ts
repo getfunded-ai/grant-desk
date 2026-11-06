@@ -100,6 +100,116 @@ export type Database = {
           },
         ];
       };
+      calendar_tokens: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          label: string | null;
+          organization_id: string;
+          revoked_at: string | null;
+          token_hash: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          organization_id: string;
+          revoked_at?: string | null;
+          token_hash: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          organization_id?: string;
+          revoked_at?: string | null;
+          token_hash?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tokens_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      contacts: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          email: string | null;
+          funder_id: string | null;
+          grant_id: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          phone: string | null;
+          role: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string | null;
+          funder_id?: string | null;
+          grant_id?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          phone?: string | null;
+          role?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string | null;
+          funder_id?: string | null;
+          grant_id?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          phone?: string | null;
+          role?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contacts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contacts_organization_id_funder_id_fkey";
+            columns: ["organization_id", "funder_id"];
+            isOneToOne: false;
+            referencedRelation: "funders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "contacts_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       deadlines: {
         Row: {
           all_day: boolean;
@@ -279,6 +389,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "external_feeds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feed_items: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          external_feed_id: string;
+          external_uid: string;
+          id: string;
+          link: string | null;
+          organization_id: string;
+          published_at: string | null;
+          summary: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          external_feed_id: string;
+          external_uid: string;
+          id?: string;
+          link?: string | null;
+          organization_id: string;
+          published_at?: string | null;
+          summary?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          external_feed_id?: string;
+          external_uid?: string;
+          id?: string;
+          link?: string | null;
+          organization_id?: string;
+          published_at?: string | null;
+          summary?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feed_items_organization_id_external_feed_id_fkey";
+            columns: ["organization_id", "external_feed_id"];
+            isOneToOne: false;
+            referencedRelation: "external_feeds";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "feed_items_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -785,6 +953,88 @@ export type Database = {
           },
         ];
       };
+      reminder_log: {
+        Row: {
+          days_before: number;
+          id: string;
+          item_key: string;
+          organization_id: string;
+          provider_message_id: string | null;
+          sent_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          days_before: number;
+          id?: string;
+          item_key: string;
+          organization_id: string;
+          provider_message_id?: string | null;
+          sent_at?: string;
+          user_id: string;
+        };
+        Update: {
+          days_before?: number;
+          id?: string;
+          item_key?: string;
+          organization_id?: string;
+          provider_message_id?: string | null;
+          sent_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reminder_preferences: {
+        Row: {
+          created_at: string;
+          id: string;
+          mode: Database["public"]["Enums"]["reminder_mode"];
+          organization_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          mode?: Database["public"]["Enums"]["reminder_mode"];
+          organization_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          mode?: Database["public"]["Enums"]["reminder_mode"];
+          organization_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_preferences_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reminder_preferences_organization_id_user_id_fkey";
+            columns: ["organization_id", "user_id"];
+            isOneToOne: true;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "user_id"];
+          },
+        ];
+      };
       tasks: {
         Row: {
           assignee_id: string | null;
@@ -880,6 +1130,7 @@ export type Database = {
       opportunity_status: "forecasted" | "open" | "closed" | "custom";
       pipeline_preset: "standard" | "sbir";
       proposal_status: "proposed" | "accepted" | "rejected";
+      reminder_mode: "each" | "digest" | "off";
       task_status: "open" | "done";
     };
     CompositeTypes: {
@@ -1012,6 +1263,7 @@ export const Constants = {
       opportunity_status: ["forecasted", "open", "closed", "custom"],
       pipeline_preset: ["standard", "sbir"],
       proposal_status: ["proposed", "accepted", "rejected"],
+      reminder_mode: ["each", "digest", "off"],
       task_status: ["open", "done"],
     },
   },
