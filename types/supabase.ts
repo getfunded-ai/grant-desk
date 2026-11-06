@@ -55,6 +55,165 @@ export type Database = {
           },
         ];
       };
+      award_reports: {
+        Row: {
+          award_id: string;
+          created_at: string;
+          created_by: string | null;
+          deadline_id: string | null;
+          due_date: string;
+          generated: boolean;
+          id: string;
+          kind: Database["public"]["Enums"]["award_report_kind"];
+          notes: string | null;
+          organization_id: string;
+          period_end: string | null;
+          period_start: string | null;
+          status: Database["public"]["Enums"]["award_report_status"];
+          submitted_on: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          deadline_id?: string | null;
+          due_date: string;
+          generated?: boolean;
+          id?: string;
+          kind?: Database["public"]["Enums"]["award_report_kind"];
+          notes?: string | null;
+          organization_id: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          status?: Database["public"]["Enums"]["award_report_status"];
+          submitted_on?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          deadline_id?: string | null;
+          due_date?: string;
+          generated?: boolean;
+          id?: string;
+          kind?: Database["public"]["Enums"]["award_report_kind"];
+          notes?: string | null;
+          organization_id?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          status?: Database["public"]["Enums"]["award_report_status"];
+          submitted_on?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "award_reports_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "award_reports_organization_id_deadline_id_fkey";
+            columns: ["organization_id", "deadline_id"];
+            isOneToOne: false;
+            referencedRelation: "deadlines";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "award_reports_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      awards: {
+        Row: {
+          award_number: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          final_report_lag_days: number;
+          grant_id: string;
+          id: string;
+          indirect_method: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate: number | null;
+          is_federal: boolean;
+          notes: string | null;
+          organization_id: string;
+          payment_method: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until: string | null;
+          report_frequency: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_number?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          final_report_lag_days?: number;
+          grant_id: string;
+          id?: string;
+          indirect_method?: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate?: number | null;
+          is_federal?: boolean;
+          notes?: string | null;
+          organization_id: string;
+          payment_method?: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until?: string | null;
+          report_frequency?: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days?: number;
+          updated_at?: string;
+        };
+        Update: {
+          award_number?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          final_report_lag_days?: number;
+          grant_id?: string;
+          id?: string;
+          indirect_method?: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate?: number | null;
+          is_federal?: boolean;
+          notes?: string | null;
+          organization_id?: string;
+          payment_method?: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until?: string | null;
+          report_frequency?: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "awards_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "awards_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       boilerplate: {
         Row: {
           body: string;
@@ -93,6 +252,181 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "boilerplate_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      budget_actuals: {
+        Row: {
+          amount: number;
+          award_id: string;
+          budget_line_id: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          organization_id: string;
+          source: string;
+          spent_on: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          award_id: string;
+          budget_line_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          organization_id: string;
+          source?: string;
+          spent_on: string;
+        };
+        Update: {
+          amount?: number;
+          award_id?: string;
+          budget_line_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          organization_id?: string;
+          source?: string;
+          spent_on?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budget_actuals_organization_id_award_id_budget_line_id_fkey";
+            columns: ["organization_id", "award_id", "budget_line_id"];
+            isOneToOne: false;
+            referencedRelation: "budget_lines";
+            referencedColumns: ["organization_id", "award_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_actuals_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_actuals_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      budget_lines: {
+        Row: {
+          award_id: string;
+          budgeted: number | null;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          organization_id: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          budgeted?: number | null;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          budgeted?: number | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_lines_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      compliance_items: {
+        Row: {
+          award_id: string;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail: string | null;
+          id: string;
+          organization_id: string;
+          sort_order: number;
+          template_key: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail?: string | null;
+          id?: string;
+          organization_id: string;
+          sort_order?: number;
+          template_key?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail?: string | null;
+          id?: string;
+          organization_id?: string;
+          sort_order?: number;
+          template_key?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "compliance_items_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -785,6 +1119,64 @@ export type Database = {
           },
         ];
       };
+      reimbursements: {
+        Row: {
+          amount: number | null;
+          award_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          invoice_number: string | null;
+          notes: string | null;
+          organization_id: string;
+          paid_on: string | null;
+          sent_on: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount?: number | null;
+          award_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_number?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          paid_on?: string | null;
+          sent_on?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number | null;
+          award_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_number?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          paid_on?: string | null;
+          sent_on?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reimbursements_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "reimbursements_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tasks: {
         Row: {
           assignee_id: string | null;
@@ -862,6 +1254,10 @@ export type Database = {
     };
     Enums: {
       actor_kind: "person" | "agent" | "system";
+      award_payment_method: "reimbursement" | "advance" | "lump_sum" | "other";
+      award_report_kind:
+        "financial" | "performance" | "final_financial" | "final_performance" | "other";
+      award_report_status: "due" | "submitted" | "accepted";
       deadline_kind: "loi" | "application" | "report" | "internal" | "other";
       feed_kind: "ical" | "rss";
       funder_kind: "foundation" | "corporate" | "federal" | "state" | "county" | "city" | "other";
@@ -876,10 +1272,12 @@ export type Database = {
         | "active"
         | "reporting"
         | "closed";
+      indirect_cost_method: "de_minimis" | "negotiated_rate" | "none" | "other";
       membership_role: "owner" | "admin" | "editor" | "viewer";
       opportunity_status: "forecasted" | "open" | "closed" | "custom";
       pipeline_preset: "standard" | "sbir";
       proposal_status: "proposed" | "accepted" | "rejected";
+      report_frequency: "quarterly" | "semiannual" | "annual" | "none";
       task_status: "open" | "done";
     };
     CompositeTypes: {
@@ -993,6 +1391,15 @@ export const Constants = {
   public: {
     Enums: {
       actor_kind: ["person", "agent", "system"],
+      award_payment_method: ["reimbursement", "advance", "lump_sum", "other"],
+      award_report_kind: [
+        "financial",
+        "performance",
+        "final_financial",
+        "final_performance",
+        "other",
+      ],
+      award_report_status: ["due", "submitted", "accepted"],
       deadline_kind: ["loi", "application", "report", "internal", "other"],
       feed_kind: ["ical", "rss"],
       funder_kind: ["foundation", "corporate", "federal", "state", "county", "city", "other"],
@@ -1008,10 +1415,12 @@ export const Constants = {
         "reporting",
         "closed",
       ],
+      indirect_cost_method: ["de_minimis", "negotiated_rate", "none", "other"],
       membership_role: ["owner", "admin", "editor", "viewer"],
       opportunity_status: ["forecasted", "open", "closed", "custom"],
       pipeline_preset: ["standard", "sbir"],
       proposal_status: ["proposed", "accepted", "rejected"],
+      report_frequency: ["quarterly", "semiannual", "annual", "none"],
       task_status: ["open", "done"],
     },
   },
