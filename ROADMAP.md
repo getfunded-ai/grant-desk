@@ -14,7 +14,7 @@ Dates assume two to four sessions at once and answers from Zach within a day.
 | B     | Data model and security       | high | C         | in review   |
 | C     | Login, shell, deploy          | high | B         | done        |
 | D     | Grants.gov sync and browse    | high | E         | in review   |
-| E     | Pipeline, calendar, reminders | high | D         | not started |
+| E     | Pipeline, calendar, reminders | high | D         | in review   |
 
 Gate: a maintainer signs in on the live site, creates an organization, adds a federal opportunity,
 subscribes to an agency's iCal feed, and sees the deadline on their own calendar.
@@ -24,10 +24,11 @@ subscribes to an agency's iCal feed, and sees the deadline on their own calendar
 | Phase | Name                        | Tier   | Runs with | Status      |
 | ----- | --------------------------- | ------ | --------- | ----------- |
 | F     | Documents and boilerplate   | medium | G, H      | not started |
-| G     | Post-award and compliance   | high   | F, H      | not started |
+| G     | Post-award and compliance   | high   | F, H      | in review   |
 | H     | Funder profiles             | medium | F, G      | not started |
 | I     | The US$1 tier               | high   | J         | not started |
 | J     | Public site, SEO, analytics | high   | I         | not started |
+| AA    | Learning loops              | high   | D, E, G   | in review   |
 
 Gate: the repo is public; the site is on its real address; a test card buys the US$1 plan; then live mode.
 

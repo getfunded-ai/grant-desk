@@ -11,6 +11,7 @@ import {
 } from "@/components/opportunities/format";
 import { StatusBadge } from "@/components/opportunities/status-badge";
 import { TrackButton } from "@/components/opportunities/track-button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireActiveOrganization } from "@/lib/auth/session";
 import { fetchOpportunity } from "@/lib/grants-gov/api";
@@ -155,12 +156,9 @@ export default async function OpportunityPage({ params }: { params: Promise<{ id
           </div>
           <div className="flex flex-col items-end gap-2">
             {tracked ? (
-              <p
-                className="rounded-md border px-3 py-1.5 text-sm"
-                title="The grant record page arrives with Phase E."
-              >
-                Tracked · in your pipeline as a prospect
-              </p>
+              <Button asChild variant="outline">
+                <Link href={`/grants/${tracked.id}`}>Tracked · open the grant</Link>
+              </Button>
             ) : canTrack ? (
               <TrackButton opportunityId={o.id} />
             ) : (

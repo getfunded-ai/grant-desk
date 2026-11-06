@@ -43,8 +43,7 @@ export async function trackOpportunity(_prev: FormState, formData: FormData): Pr
   }
 
   const existing = await findTrackedGrant(supabase, active.id, opportunityId);
-  // The grant record page arrives with Phase E; until then the opportunity page shows the tracked state.
-  if (existing) redirect(`/opportunities/${opportunityId}`);
+  if (existing) redirect(`/grants/${existing.id}`);
 
   const title = String(opportunity.title).slice(0, 500);
   const { data: grant, error: insertError } = await supabase
@@ -83,5 +82,5 @@ export async function trackOpportunity(_prev: FormState, formData: FormData): Pr
 
   revalidatePath(`/opportunities/${opportunityId}`);
   revalidatePath("/opportunities");
-  redirect(`/opportunities/${opportunityId}`);
+  redirect(`/grants/${grant.id}`);
 }

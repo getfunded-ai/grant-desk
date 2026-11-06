@@ -74,6 +74,165 @@ export type Database = {
         };
         Relationships: [];
       };
+      award_reports: {
+        Row: {
+          award_id: string;
+          created_at: string;
+          created_by: string | null;
+          deadline_id: string | null;
+          due_date: string;
+          generated: boolean;
+          id: string;
+          kind: Database["public"]["Enums"]["award_report_kind"];
+          notes: string | null;
+          organization_id: string;
+          period_end: string | null;
+          period_start: string | null;
+          status: Database["public"]["Enums"]["award_report_status"];
+          submitted_on: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          deadline_id?: string | null;
+          due_date: string;
+          generated?: boolean;
+          id?: string;
+          kind?: Database["public"]["Enums"]["award_report_kind"];
+          notes?: string | null;
+          organization_id: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          status?: Database["public"]["Enums"]["award_report_status"];
+          submitted_on?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          deadline_id?: string | null;
+          due_date?: string;
+          generated?: boolean;
+          id?: string;
+          kind?: Database["public"]["Enums"]["award_report_kind"];
+          notes?: string | null;
+          organization_id?: string;
+          period_end?: string | null;
+          period_start?: string | null;
+          status?: Database["public"]["Enums"]["award_report_status"];
+          submitted_on?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "award_reports_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "award_reports_organization_id_deadline_id_fkey";
+            columns: ["organization_id", "deadline_id"];
+            isOneToOne: false;
+            referencedRelation: "deadlines";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "award_reports_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      awards: {
+        Row: {
+          award_number: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          final_report_lag_days: number;
+          grant_id: string;
+          id: string;
+          indirect_method: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate: number | null;
+          is_federal: boolean;
+          notes: string | null;
+          organization_id: string;
+          payment_method: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until: string | null;
+          report_frequency: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_number?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          final_report_lag_days?: number;
+          grant_id: string;
+          id?: string;
+          indirect_method?: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate?: number | null;
+          is_federal?: boolean;
+          notes?: string | null;
+          organization_id: string;
+          payment_method?: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until?: string | null;
+          report_frequency?: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days?: number;
+          updated_at?: string;
+        };
+        Update: {
+          award_number?: string | null;
+          closed_at?: string | null;
+          closed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          final_report_lag_days?: number;
+          grant_id?: string;
+          id?: string;
+          indirect_method?: Database["public"]["Enums"]["indirect_cost_method"] | null;
+          indirect_rate?: number | null;
+          is_federal?: boolean;
+          notes?: string | null;
+          organization_id?: string;
+          payment_method?: Database["public"]["Enums"]["award_payment_method"] | null;
+          records_retention_until?: string | null;
+          report_frequency?: Database["public"]["Enums"]["report_frequency"];
+          report_lag_days?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "awards_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "awards_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       boilerplate: {
         Row: {
           body: string;
@@ -116,6 +275,294 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "organizations";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      budget_actuals: {
+        Row: {
+          amount: number;
+          award_id: string;
+          budget_line_id: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          id: string;
+          organization_id: string;
+          source: string;
+          spent_on: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount: number;
+          award_id: string;
+          budget_line_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          organization_id: string;
+          source?: string;
+          spent_on: string;
+        };
+        Update: {
+          amount?: number;
+          award_id?: string;
+          budget_line_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          id?: string;
+          organization_id?: string;
+          source?: string;
+          spent_on?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budget_actuals_organization_id_award_id_budget_line_id_fkey";
+            columns: ["organization_id", "award_id", "budget_line_id"];
+            isOneToOne: false;
+            referencedRelation: "budget_lines";
+            referencedColumns: ["organization_id", "award_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_actuals_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_actuals_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      budget_lines: {
+        Row: {
+          award_id: string;
+          budgeted: number | null;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          organization_id: string;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          budgeted?: number | null;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          budgeted?: number | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "budget_lines_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "budget_lines_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      calendar_tokens: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          label: string | null;
+          organization_id: string;
+          revoked_at: string | null;
+          token_hash: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          organization_id: string;
+          revoked_at?: string | null;
+          token_hash: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          organization_id?: string;
+          revoked_at?: string | null;
+          token_hash?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "calendar_tokens_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      compliance_items: {
+        Row: {
+          award_id: string;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          detail: string | null;
+          id: string;
+          organization_id: string;
+          sort_order: number;
+          template_key: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          award_id: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail?: string | null;
+          id?: string;
+          organization_id: string;
+          sort_order?: number;
+          template_key?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          award_id?: string;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          detail?: string | null;
+          id?: string;
+          organization_id?: string;
+          sort_order?: number;
+          template_key?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "compliance_items_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      contacts: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          email: string | null;
+          funder_id: string | null;
+          grant_id: string | null;
+          id: string;
+          name: string;
+          notes: string | null;
+          organization_id: string;
+          phone: string | null;
+          publishability: Database["public"]["Enums"]["contact_publishability"];
+          role: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string | null;
+          funder_id?: string | null;
+          grant_id?: string | null;
+          id?: string;
+          name: string;
+          notes?: string | null;
+          organization_id: string;
+          phone?: string | null;
+          publishability?: Database["public"]["Enums"]["contact_publishability"];
+          role?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          email?: string | null;
+          funder_id?: string | null;
+          grant_id?: string | null;
+          id?: string;
+          name?: string;
+          notes?: string | null;
+          organization_id?: string;
+          phone?: string | null;
+          publishability?: Database["public"]["Enums"]["contact_publishability"];
+          role?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contacts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contacts_organization_id_funder_id_fkey";
+            columns: ["organization_id", "funder_id"];
+            isOneToOne: false;
+            referencedRelation: "funders";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "contacts_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
           },
         ];
       };
@@ -298,6 +745,64 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "external_feeds_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feed_items: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          external_feed_id: string;
+          external_uid: string;
+          id: string;
+          link: string | null;
+          organization_id: string;
+          published_at: string | null;
+          summary: string | null;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          external_feed_id: string;
+          external_uid: string;
+          id?: string;
+          link?: string | null;
+          organization_id: string;
+          published_at?: string | null;
+          summary?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          external_feed_id?: string;
+          external_uid?: string;
+          id?: string;
+          link?: string | null;
+          organization_id?: string;
+          published_at?: string | null;
+          summary?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feed_items_organization_id_external_feed_id_fkey";
+            columns: ["organization_id", "external_feed_id"];
+            isOneToOne: false;
+            referencedRelation: "external_feeds";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "feed_items_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -499,6 +1004,130 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      knowledge_facts: {
+        Row: {
+          confidence: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at: string | null;
+          confirmed_by: string | null;
+          created_at: string;
+          created_by: string | null;
+          fact: string;
+          id: string;
+          organization_id: string;
+          source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref: string;
+          status: Database["public"]["Enums"]["knowledge_status"];
+          subject_id: string | null;
+          subject_kind: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          confidence?: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          fact: string;
+          id?: string;
+          organization_id: string;
+          source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref: string;
+          status?: Database["public"]["Enums"]["knowledge_status"];
+          subject_id?: string | null;
+          subject_kind: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by?: string | null;
+        };
+        Update: {
+          confidence?: Database["public"]["Enums"]["knowledge_confidence"];
+          confirmed_at?: string | null;
+          confirmed_by?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          fact?: string;
+          id?: string;
+          organization_id?: string;
+          source_kind?: Database["public"]["Enums"]["knowledge_source_kind"];
+          source_ref?: string;
+          status?: Database["public"]["Enums"]["knowledge_status"];
+          subject_id?: string | null;
+          subject_kind?: Database["public"]["Enums"]["knowledge_subject_kind"];
+          superseded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_facts_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "knowledge_facts_organization_id_superseded_by_fkey";
+            columns: ["organization_id", "superseded_by"];
+            isOneToOne: false;
+            referencedRelation: "knowledge_facts";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      learning_sessions: {
+        Row: {
+          closed_at: string | null;
+          created_at: string;
+          goal: string;
+          id: string;
+          lessons_summary: string | null;
+          number: number;
+          opened_at: string;
+          opened_by: string | null;
+          organization_id: string;
+          packet: NonNullable<Json>;
+          playbook_key: Database["public"]["Enums"]["playbook_key"];
+          status: Database["public"]["Enums"]["learning_session_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          closed_at?: string | null;
+          created_at?: string;
+          goal: string;
+          id?: string;
+          lessons_summary?: string | null;
+          number: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          organization_id: string;
+          packet: NonNullable<Json>;
+          playbook_key: Database["public"]["Enums"]["playbook_key"];
+          status?: Database["public"]["Enums"]["learning_session_status"];
+          updated_at?: string;
+        };
+        Update: {
+          closed_at?: string | null;
+          created_at?: string;
+          goal?: string;
+          id?: string;
+          lessons_summary?: string | null;
+          number?: number;
+          opened_at?: string;
+          opened_by?: string | null;
+          organization_id?: string;
+          packet?: NonNullable<Json>;
+          playbook_key?: Database["public"]["Enums"]["playbook_key"];
+          status?: Database["public"]["Enums"]["learning_session_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "learning_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       memberships: {
         Row: {
@@ -788,6 +1417,7 @@ export type Database = {
           created_by: string | null;
           ein: string | null;
           id: string;
+          kind: Database["public"]["Enums"]["organization_kind"];
           mission: string | null;
           name: string;
           uei: string | null;
@@ -800,6 +1430,7 @@ export type Database = {
           created_by?: string | null;
           ein?: string | null;
           id?: string;
+          kind?: Database["public"]["Enums"]["organization_kind"];
           mission?: string | null;
           name: string;
           uei?: string | null;
@@ -811,6 +1442,7 @@ export type Database = {
           created_by?: string | null;
           ein?: string | null;
           id?: string;
+          kind?: Database["public"]["Enums"]["organization_kind"];
           mission?: string | null;
           name?: string;
           uei?: string | null;
@@ -908,6 +1540,242 @@ export type Database = {
           },
         ];
       };
+      reimbursements: {
+        Row: {
+          amount: number | null;
+          award_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          invoice_number: string | null;
+          notes: string | null;
+          organization_id: string;
+          paid_on: string | null;
+          sent_on: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount?: number | null;
+          award_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_number?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          paid_on?: string | null;
+          sent_on?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount?: number | null;
+          award_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          invoice_number?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          paid_on?: string | null;
+          sent_on?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reimbursements_organization_id_award_id_fkey";
+            columns: ["organization_id", "award_id"];
+            isOneToOne: false;
+            referencedRelation: "awards";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "reimbursements_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reminder_log: {
+        Row: {
+          days_before: number;
+          id: string;
+          item_key: string;
+          organization_id: string;
+          provider_message_id: string | null;
+          sent_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          days_before: number;
+          id?: string;
+          item_key: string;
+          organization_id: string;
+          provider_message_id?: string | null;
+          sent_at?: string;
+          user_id: string;
+        };
+        Update: {
+          days_before?: number;
+          id?: string;
+          item_key?: string;
+          organization_id?: string;
+          provider_message_id?: string | null;
+          sent_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reminder_preferences: {
+        Row: {
+          created_at: string;
+          id: string;
+          mode: Database["public"]["Enums"]["reminder_mode"];
+          organization_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          mode?: Database["public"]["Enums"]["reminder_mode"];
+          organization_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          mode?: Database["public"]["Enums"]["reminder_mode"];
+          organization_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_preferences_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reminder_preferences_organization_id_user_id_fkey";
+            columns: ["organization_id", "user_id"];
+            isOneToOne: true;
+            referencedRelation: "memberships";
+            referencedColumns: ["organization_id", "user_id"];
+          },
+        ];
+      };
+      session_lessons: {
+        Row: {
+          applies_to: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at: string;
+          created_by: string | null;
+          evidence: string | null;
+          id: string;
+          lesson: string;
+          organization_id: string;
+          session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          applies_to?: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at?: string;
+          created_by?: string | null;
+          evidence?: string | null;
+          id?: string;
+          lesson: string;
+          organization_id: string;
+          session_id: string;
+        };
+        Update: {
+          applies_to?: Database["public"]["Enums"]["lesson_applies_to"];
+          created_at?: string;
+          created_by?: string | null;
+          evidence?: string | null;
+          id?: string;
+          lesson?: string;
+          organization_id?: string;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_lessons_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "session_lessons_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
+      session_proposals: {
+        Row: {
+          created_at: string;
+          id: string;
+          organization_id: string;
+          proposal_id: string;
+          session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          organization_id: string;
+          proposal_id: string;
+          session_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          organization_id?: string;
+          proposal_id?: string;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_proposals_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "session_proposals_organization_id_proposal_id_fkey";
+            columns: ["organization_id", "proposal_id"];
+            isOneToOne: false;
+            referencedRelation: "proposals";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "session_proposals_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
       tasks: {
         Row: {
           assignee_id: string | null;
@@ -976,12 +1844,92 @@ export type Database = {
           },
         ];
       };
+      touches: {
+        Row: {
+          contact_id: string;
+          created_at: string;
+          direction: Database["public"]["Enums"]["touch_direction"];
+          grant_id: string | null;
+          happened_at: string;
+          id: string;
+          kind: Database["public"]["Enums"]["touch_kind"];
+          logged_by: string | null;
+          organization_id: string;
+          session_id: string | null;
+          summary: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          contact_id: string;
+          created_at?: string;
+          direction: Database["public"]["Enums"]["touch_direction"];
+          grant_id?: string | null;
+          happened_at?: string;
+          id?: string;
+          kind: Database["public"]["Enums"]["touch_kind"];
+          logged_by?: string | null;
+          organization_id: string;
+          session_id?: string | null;
+          summary: string;
+        };
+        Update: {
+          contact_id?: string;
+          created_at?: string;
+          direction?: Database["public"]["Enums"]["touch_direction"];
+          grant_id?: string | null;
+          happened_at?: string;
+          id?: string;
+          kind?: Database["public"]["Enums"]["touch_kind"];
+          logged_by?: string | null;
+          organization_id?: string;
+          session_id?: string | null;
+          summary?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "touches_organization_id_contact_id_fkey";
+            columns: ["organization_id", "contact_id"];
+            isOneToOne: false;
+            referencedRelation: "contacts";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_grant_id_fkey";
+            columns: ["organization_id", "grant_id"];
+            isOneToOne: false;
+            referencedRelation: "grants";
+            referencedColumns: ["organization_id", "id"];
+          },
+          {
+            foreignKeyName: "touches_organization_id_session_id_fkey";
+            columns: ["organization_id", "session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["organization_id", "id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      accept_learning_proposal: {
+        Args: { p_proposal_id: string; p_record: Json };
+        Returns: string;
+      };
       create_organization: { Args: { p_name: string }; Returns: string };
+      record_learning_proposals: {
+        Args: { p_items: Json; p_session_id: string };
+        Returns: string[];
+      };
       search_opportunities: {
         Args: {
           p_agency?: string;
@@ -1017,6 +1965,16 @@ export type Database = {
           total_count: number;
         }[];
       };
+      supersede_knowledge_fact: {
+        Args: {
+          p_confidence: Database["public"]["Enums"]["knowledge_confidence"];
+          p_fact: string;
+          p_old_id: string;
+          p_source_kind: Database["public"]["Enums"]["knowledge_source_kind"];
+          p_source_ref: string;
+        };
+        Returns: string;
+      };
       upsert_catalog_opportunities: {
         Args: { p_rows: Json; p_source_system: string };
         Returns: {
@@ -1028,6 +1986,11 @@ export type Database = {
     };
     Enums: {
       actor_kind: "person" | "agent" | "system";
+      award_payment_method: "reimbursement" | "advance" | "lump_sum" | "other";
+      award_report_kind:
+        "financial" | "performance" | "final_financial" | "final_performance" | "other";
+      award_report_status: "due" | "submitted" | "accepted";
+      contact_publishability: "private" | "public";
       deadline_kind: "loi" | "application" | "report" | "internal" | "other";
       feed_kind: "ical" | "rss";
       funder_kind: "foundation" | "corporate" | "federal" | "state" | "county" | "city" | "other";
@@ -1042,11 +2005,30 @@ export type Database = {
         | "active"
         | "reporting"
         | "closed";
+      indirect_cost_method: "de_minimis" | "negotiated_rate" | "none" | "other";
+      knowledge_confidence: "stated" | "likely" | "guess";
+      knowledge_source_kind: "filing" | "website" | "document" | "person" | "ai";
+      knowledge_status: "proposed" | "confirmed" | "superseded";
+      knowledge_subject_kind: "organization" | "funder" | "opportunity" | "contact" | "grant";
+      learning_session_status: "open" | "closed";
+      lesson_applies_to: "prospecting" | "outreach" | "application" | "post_award" | "general";
       membership_role: "owner" | "admin" | "editor" | "viewer";
       opportunity_status: "forecasted" | "open" | "closed" | "custom";
+      organization_kind: "seeker" | "funder" | "company";
       pipeline_preset: "standard" | "sbir";
+      playbook_key:
+        | "seeker-prospecting"
+        | "seeker-outreach"
+        | "application-prep"
+        | "post-award-reporting"
+        | "funder-grantee-outreach"
+        | "company-nondilutive";
       proposal_status: "proposed" | "accepted" | "rejected";
+      reminder_mode: "each" | "digest" | "off";
+      report_frequency: "quarterly" | "semiannual" | "annual" | "none";
       task_status: "open" | "done";
+      touch_direction: "out" | "in";
+      touch_kind: "email" | "call" | "meeting" | "letter" | "note";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1159,6 +2141,16 @@ export const Constants = {
   public: {
     Enums: {
       actor_kind: ["person", "agent", "system"],
+      award_payment_method: ["reimbursement", "advance", "lump_sum", "other"],
+      award_report_kind: [
+        "financial",
+        "performance",
+        "final_financial",
+        "final_performance",
+        "other",
+      ],
+      award_report_status: ["due", "submitted", "accepted"],
+      contact_publishability: ["private", "public"],
       deadline_kind: ["loi", "application", "report", "internal", "other"],
       feed_kind: ["ical", "rss"],
       funder_kind: ["foundation", "corporate", "federal", "state", "county", "city", "other"],
@@ -1174,11 +2166,31 @@ export const Constants = {
         "reporting",
         "closed",
       ],
+      indirect_cost_method: ["de_minimis", "negotiated_rate", "none", "other"],
+      knowledge_confidence: ["stated", "likely", "guess"],
+      knowledge_source_kind: ["filing", "website", "document", "person", "ai"],
+      knowledge_status: ["proposed", "confirmed", "superseded"],
+      knowledge_subject_kind: ["organization", "funder", "opportunity", "contact", "grant"],
+      learning_session_status: ["open", "closed"],
+      lesson_applies_to: ["prospecting", "outreach", "application", "post_award", "general"],
       membership_role: ["owner", "admin", "editor", "viewer"],
       opportunity_status: ["forecasted", "open", "closed", "custom"],
+      organization_kind: ["seeker", "funder", "company"],
       pipeline_preset: ["standard", "sbir"],
+      playbook_key: [
+        "seeker-prospecting",
+        "seeker-outreach",
+        "application-prep",
+        "post-award-reporting",
+        "funder-grantee-outreach",
+        "company-nondilutive",
+      ],
       proposal_status: ["proposed", "accepted", "rejected"],
+      reminder_mode: ["each", "digest", "off"],
+      report_frequency: ["quarterly", "semiannual", "annual", "none"],
       task_status: ["open", "done"],
+      touch_direction: ["out", "in"],
+      touch_kind: ["email", "call", "meeting", "letter", "note"],
     },
   },
 } as const;
