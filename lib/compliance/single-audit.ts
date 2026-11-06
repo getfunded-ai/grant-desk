@@ -38,7 +38,7 @@ export interface SingleAuditStatus {
   /** Federal spending recorded as actuals inside the fiscal year. */
   recordedSpend: number;
   /** Federal award amounts in force during the fiscal year (an upper bound on what could be spent).
-   * Null when no overlapping federal award has an amount recorded: unknown, not zero. */
+   * 0 when no federal award overlaps the year; null when awards overlap but none has an amount. */
   awardsInForce: number | null;
   /** Federal awards whose amount is not known, so they could not be counted. */
   unknownAmounts: number;
@@ -77,13 +77,16 @@ export function singleAuditStatus(
   fiscalYear: FiscalYear,
   threshold = SINGLE_AUDIT_THRESHOLD_USD,
 ): SingleAuditStatus {
-  let awardsInForce: number | null = null;
+  let known: number | null = null;
   let unknownAmounts = 0;
+  let overlapping = 0;
   for (const award of awards) {
     if (!overlaps(award, fiscalYear)) continue;
+    overlapping += 1;
     if (award.amount === null) unknownAmounts += 1;
-    else awardsInForce = (awardsInForce ?? 0) + award.amount;
+    else known = (known ?? 0) + award.amount;
   }
+  const awardsInForce = overlapping === 0 ? 0 : known;
   const recordedSpend = actuals
     .filter(
       (a) =>

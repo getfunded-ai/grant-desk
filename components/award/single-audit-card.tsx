@@ -10,8 +10,12 @@ function headline(status: SingleAuditStatus): string {
   if (status.basis === "awards_in_force")
     return `Single audit possible for ${fy}: federal awards in force reach the threshold. Check with your auditor.`;
   if (status.awardsInForce === null && status.recordedSpend === 0)
-    return `Cannot tell for ${fy}: no federal award amounts or spending recorded yet.`;
-  return `Below the single-audit threshold for ${fy}, on what is recorded here.`;
+    return `Cannot tell for ${fy}: federal awards are in force but no amounts or spending are recorded yet.`;
+  const unknown =
+    status.unknownAmounts > 0
+      ? ` ${status.unknownAmounts} federal award amount${status.unknownAmounts === 1 ? " is" : "s are"} not recorded, so this may be low.`
+      : "";
+  return `Below the single-audit threshold for ${fy}, on what is recorded here.${unknown}`;
 }
 
 /** The organization-wide single-audit flag (2 CFR 200.501). Shown on every federal award. */

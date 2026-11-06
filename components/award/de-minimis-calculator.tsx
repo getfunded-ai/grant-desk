@@ -13,12 +13,22 @@ export function DeMinimisCalculator({ currency }: { currency: string }) {
   const [included, setIncluded] = useState("");
   const [excluded, setExcluded] = useState("");
   const [subawards, setSubawards] = useState("");
+  const includedValue = parseAmount(included);
+  const excludedValue = parseAmount(excluded);
+  const subawardLines = subawards.split(/[\s;]+/).filter((part) => part.trim() !== "");
+  const subawardValues = parseAmountList(subawards);
+  const unreadable = [
+    included.trim() !== "" && includedValue === null ? "direct costs that count" : null,
+    excluded.trim() !== "" && excludedValue === null ? "direct costs left out" : null,
+    subawardLines.length !== subawardValues.length ? "one or more subaward lines" : null,
+  ].filter((part): part is string => part !== null);
   const result = deMinimisIndirect({
-    includedDirectCosts: parseAmount(included) ?? 0,
-    excludedDirectCosts: parseAmount(excluded) ?? 0,
-    subawards: parseAmountList(subawards),
+    includedDirectCosts: includedValue ?? 0,
+    excludedDirectCosts: excludedValue ?? 0,
+    subawards: subawardValues,
   });
-  const hasInput = included.trim() !== "" || subawards.trim() !== "";
+  // No figure is shown while any field cannot be read: a guess is not an answer.
+  const hasInput = (included.trim() !== "" || subawards.trim() !== "") && unreadable.length === 0;
 
   return (
     <div className="space-y-4">
@@ -55,6 +65,11 @@ export function DeMinimisCalculator({ currency }: { currency: string }) {
           />
         </div>
       </div>
+      {unreadable.length > 0 ? (
+        <p className="text-sm text-destructive" role="alert">
+          Could not read {unreadable.join(", ")}. Use plain numbers such as 12,500.75.
+        </p>
+      ) : null}
       <dl className="grid grid-cols-[1fr_auto] gap-y-1 text-sm">
         <dt className="text-muted-foreground">Subawards counted</dt>
         <dd className="text-right">

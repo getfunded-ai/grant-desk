@@ -87,14 +87,14 @@ export function parseAmount(text: string): number | null {
     negative = true;
     trimmed = trimmed.slice(1, -1).trim();
   }
-  if (trimmed.startsWith("-")) {
-    negative = !negative;
-    trimmed = trimmed.slice(1).trim();
-  } else if (trimmed.startsWith("+")) {
-    trimmed = trimmed.slice(1).trim();
-  }
-  trimmed = trimmed.replace(/^(US\$|USD|\$)\s*/i, "");
-  if (!/^\d{1,3}(,\d{3})*(\.\d*)?$|^\d+(\.\d*)?$/.test(trimmed)) return null;
+  // A sign before or after the currency sign; a second sign inside parentheses is refused.
+  const signed = /^([-+])?\s*(?:US\$|USD|\$)?\s*([-+])?\s*(.*)$/.exec(trimmed);
+  if (!signed) return null;
+  const signs = [signed[1], signed[2]].filter(Boolean);
+  if (signs.length > 1 || (negative && signs.length > 0)) return null;
+  if (signs[0] === "-") negative = true;
+  trimmed = signed[3];
+  if (!/^(\d{1,3}(,\d{3})*|\d+)?(\.\d*)?$/.test(trimmed) || !/\d/.test(trimmed)) return null;
   const value = Number(trimmed.replace(/,/g, ""));
   if (!Number.isFinite(value)) return null;
   return negative ? -value : value;
