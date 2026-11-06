@@ -4,13 +4,13 @@ Living status. Every agent updates its own phase row and its own session-log lin
 
 ## Phases
 
-| Phase | Name                          | Status      | Pull request                       | Verified by                                                                           |
-| ----- | ----------------------------- | ----------- | ---------------------------------- | ------------------------------------------------------------------------------------- |
-| A     | Repo and guardrails           | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds                     |
-| B     | Data model and security       | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests                                 |
-| C     | Login, shell, deploy          | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests                                 |
-| E     | Pipeline, calendar, reminders | in review   | opened 2026-11-05 (number below)   | typecheck, lint, format, build; 346 migration and RLS tests; feed readers run by hand |
-| D–Z   | see ROADMAP.md                | not started |                                    |                                                                                       |
+| Phase | Name                    | Status      | Pull request                       | Verified by                                                       |
+| ----- | ----------------------- | ----------- | ---------------------------------- | ----------------------------------------------------------------- |
+| A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds |
+| B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
+| C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
+| E     | Pipeline and calendar   | in review   | opened 2026-11-05, link in log     | typecheck, lint, format, build; 346 tests; feed readers by hand   |
+| D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
 
 ## Decisions
 
