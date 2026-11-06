@@ -8,7 +8,7 @@ Living status. Every agent updates its own phase row and its own session-log lin
 | ----- | ----------------------- | ----------- | ---------------------------------- | ----------------------------------------------------------------- |
 | A     | Repo and guardrails     | done        | merged before the repo went public | format, typecheck, lint, build; three fresh-context review rounds |
 | B     | Data model and security | in review   | #28                                | db reset, advisors, typecheck, lint, build; 262 tests             |
-| C     | Login, shell, deploy    | in progress |                                    |                                                                   |
+| C     | Login, shell, deploy    | done        | #29 (merged 2026-11-06)            | typecheck, lint, format, two builds; 66 sign-in tests             |
 | D–Z   | see ROADMAP.md          | not started |                                    |                                                                   |
 
 ## Decisions
